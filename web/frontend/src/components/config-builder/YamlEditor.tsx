@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import Editor, { Monaco, OnMount } from "@monaco-editor/react";
+import Editor from "@monaco-editor/react";
 import yaml from "js-yaml";
 import { 
   Code2, 
@@ -14,6 +14,9 @@ import { useConfigStore } from "../../store/configStore";
 import { Button } from "../common/Button";
 import type { TrainingConfig, Algorithm, Backend } from "../../types/config";
 import type * as MonacoEditor from "monaco-editor";
+
+type Monaco = typeof MonacoEditor;
+type OnMount = (editor: MonacoEditor.editor.IStandaloneCodeEditor, monaco: Monaco) => void;
 
 interface YamlEditorProps {
   className?: string;

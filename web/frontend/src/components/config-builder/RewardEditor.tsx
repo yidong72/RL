@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import Editor, { Monaco, OnMount } from "@monaco-editor/react";
+import Editor from "@monaco-editor/react";
 import { 
   Code2, 
   AlertTriangle, 
@@ -22,6 +22,9 @@ import { useConfigStore } from "../../store/configStore";
 import { Button } from "../common/Button";
 import { TestHarness } from "./TestHarness";
 import type * as MonacoEditor from "monaco-editor";
+
+type Monaco = typeof MonacoEditor;
+type OnMount = (editor: MonacoEditor.editor.IStandaloneCodeEditor, monaco: Monaco) => void;
 
 /**
  * Reward function template type
