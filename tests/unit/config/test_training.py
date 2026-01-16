@@ -72,7 +72,8 @@ class TestCheckpointingConfig:
 
     def test_invalid_save_period(self):
         """Test invalid save period."""
-        with pytest.raises(ConfigValidationError):
+        from pydantic import ValidationError
+        with pytest.raises(ValidationError):
             CheckpointingConfig(save_period=0)
 
 
@@ -172,7 +173,8 @@ class TestGRPOConfig:
 
     def test_invalid_num_prompts(self):
         """Test invalid num_prompts_per_step."""
-        with pytest.raises(ConfigValidationError):
+        from pydantic import ValidationError
+        with pytest.raises(ValidationError):
             GRPOConfig(
                 policy=PolicyConfig(model_name="gpt2"),
                 num_prompts_per_step=0,
@@ -180,7 +182,8 @@ class TestGRPOConfig:
 
     def test_invalid_num_generations(self):
         """Test invalid num_generations_per_prompt."""
-        with pytest.raises(ConfigValidationError):
+        from pydantic import ValidationError
+        with pytest.raises(ValidationError):
             GRPOConfig(
                 policy=PolicyConfig(model_name="gpt2"),
                 num_generations_per_prompt=0,
@@ -259,10 +262,12 @@ class TestDPOLossConfig:
 
     def test_invalid_beta(self):
         """Test invalid beta value."""
-        with pytest.raises(ConfigValidationError):
+        from pydantic import ValidationError
+        with pytest.raises(ValidationError):
             DPOLossConfig(beta=0)
 
     def test_invalid_label_smoothing(self):
         """Test invalid label smoothing value."""
-        with pytest.raises(ConfigValidationError):
+        from pydantic import ValidationError
+        with pytest.raises(ValidationError):
             DPOLossConfig(label_smoothing=1.5)

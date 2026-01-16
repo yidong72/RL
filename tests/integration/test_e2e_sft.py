@@ -191,7 +191,7 @@ class TestSFTCallbacksIntegration:
         from nemo_rl.trainers.callbacks import LoggingCallback, CallbackList
 
         trainer = SFTTrainer.from_pretrained("test-model", max_steps=1)
-        callback = LoggingCallback(log_interval=1)
+        callback = LoggingCallback(log_every=1)
 
         trainer._callbacks = CallbackList([callback])
         
@@ -206,9 +206,9 @@ class TestSFTCallbacksIntegration:
 
         callback = CheckpointCallback(
             every_n_steps=100,
-            save_best=True,
+            save_best_only=True,
             monitor="loss",
         )
 
         assert callback.every_n_steps == 100
-        assert callback.save_best is True
+        assert callback.save_best_only is True

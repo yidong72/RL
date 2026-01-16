@@ -122,7 +122,8 @@ class TestPolicyConfigFromPretrained:
             tensor_parallel_size=4,
         )
 
-        assert config.backend.value == "megatron"
+        # Backend is stored as string value due to use_enum_values=True
+        assert config.backend == "megatron"
         assert config.megatron_cfg.tensor_model_parallel_size == 4
 
 

@@ -1,0 +1,65 @@
+# E2E Multi-Node GRPO Training Configuration
+# Used by: tests/test_suites/llm/grpo_e2e_2n8g.sh
+# Purpose: Validate multi-node GRPO training with distributed checkpointing
+#
+# Acceptance Criteria validated:
+# - AC-7.8: Async GRPO mode works
+# - AC-10.5: Distributed checkpoint works across nodes
+# - AC-12.2: Multi-node training works
+
+defaults: ../../grpo_math_1B.yaml
+
+grpo:
+  num_prompts_per_step: 32
+  num_generations_per_prompt: 16
+  max_num_steps: 50
+  async:
+    enabled: true  # AC-7.8: Async GRPO mode
+
+loss_fn:
+  use_importance_sampling_correction: true
+
+checkpointing:
+  enabled: true  # AC-10.5: Distributed checkpointing
+  checkpoint_dir: results/grpo_e2e_2n8g
+
+policy:
+  model_name: Qwen/Qwen2.5-1.5B-Instruct
+  tokenizer:
+    name: Qwen/Qwen2.5-1.5B-Instruct
+  train_micro_batch_size: 1
+  logprob_batch_size: 2
+  max_total_sequence_length: 2048
+  make_sequence_length_divisible_by: 1
+  dtensor_cfg:
+    enabled: true
+    tensor_parallel_size: 1
+    sequence_parallel: false
+    optimizer:
+      lr: 5.0e-07
+      min_lr: 5.0e-08
+      weight_decay: 0.0
+    scheduler:
+      lr_warmup_iters: 2
+      lr_warmup_init: 5.0e-08
+  generation:
+    max_new_tokens: 1024
+    vllm_cfg:
+      gpu_memory_utilization: 0.5
+      max_model_len: 2048
+
+data:
+  max_input_seq_length: 1024
+
+logger:
+  log_dir: logs/grpo_e2e_2n8g
+  wandb_enabled: true
+  tensorboard_enabled: true
+  wandb:
+    project: nemo-rl
+    name: grpo_e2e_2n8g
+
+# AC-12.2: Multi-node configuration
+cluster:
+  num_nodes: 2
+  gpus_per_node: 8

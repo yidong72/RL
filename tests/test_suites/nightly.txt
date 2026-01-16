@@ -54,6 +54,9 @@ tests/test_suites/llm/grpo-qwen3-8b-base-1n8g-fp8-kvcache-megatron.sh
 # Non-colocated
 tests/test_suites/llm/grpo-llama3.1-8b-instruct-2n8g-fsdp2tp1-noncolocated.sh
 
+# E2E Multi-Node GRPO Training (TASK-015)
+tests/test_suites/llm/grpo_e2e_2n8g.sh
+
 # Nemotron Super 49B
 #https://github.com/NVIDIA-NeMo/RL/issues/1374
 #tests/test_suites/llm/grpo-math-llama-nemotron-super-49b-v.5-4n8g-fsdp2tp8.sh

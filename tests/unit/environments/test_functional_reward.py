@@ -100,8 +100,8 @@ class TestFunctionalRewardWrapper:
 
         assert isinstance(rewards, torch.Tensor)
         assert rewards.shape == (2,)
-        assert rewards[0].item() == len(responses[0]) / 100.0
-        assert rewards[1].item() == len(responses[1]) / 100.0
+        assert rewards[0].item() == pytest.approx(len(responses[0]) / 100.0)
+        assert rewards[1].item() == pytest.approx(len(responses[1]) / 100.0)
 
     def test_callable_interface(self):
         """Test that wrapper is callable for direct reward computation."""

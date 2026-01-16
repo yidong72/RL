@@ -191,7 +191,12 @@ class TestDPOPreferenceData:
         train_loader = datamodule.train_dataloader()
 
         batch = next(iter(train_loader))
-        assert len(batch) == 2
+        # Batch is a dict with 3 keys: prompt, chosen, rejected
+        assert "prompt" in batch
+        assert "chosen" in batch
+        assert "rejected" in batch
+        # Each key should have 2 samples (batch_size=2)
+        assert len(batch["prompt"]) == 2
 
 
 class TestDPOLossIntegration:
@@ -208,8 +213,16 @@ class TestDPOLossIntegration:
         """Test DPO loss accepts various parameters."""
         from nemo_rl.algorithms.dpo.loss import DPOLoss
 
-        loss = DPOLoss(beta=0.2)
-        assert loss.beta == 0.2
+        # DPOLoss takes a config dict with reference_policy_kl_penalty (beta)
+        config = {
+            "reference_policy_kl_penalty": 0.2,
+            "preference_loss_weight": 1.0,
+            "sft_loss_weight": 0.0,
+            "preference_average_log_probs": False,
+            "sft_average_log_probs": False,
+        }
+        loss = DPOLoss(config)
+        assert loss.reference_policy_kl_penalty == 0.2
 
 
 class TestDPOCallbacksIntegration:

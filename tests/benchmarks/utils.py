@@ -125,6 +125,10 @@ class BaselineEntry:
         tolerance: Acceptable regression percentage (e.g., 0.05 = 5%).
         version: Version when baseline was recorded.
         timestamp: When baseline was recorded.
+        description: Optional description.
+        startup_time_sec: Optional startup time baseline.
+        save_time_sec: Optional checkpoint save time baseline.
+        load_time_sec: Optional checkpoint load time baseline.
     """
 
     name: str
@@ -133,6 +137,10 @@ class BaselineEntry:
     tolerance: float = 0.05
     version: str = "1.0"
     timestamp: str = field(default_factory=lambda: datetime.now().isoformat())
+    description: str = ""
+    startup_time_sec: float = 0.0
+    save_time_sec: float = 0.0
+    load_time_sec: float = 0.0
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary."""

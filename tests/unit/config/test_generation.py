@@ -50,17 +50,20 @@ class TestGenerationConfig:
 
     def test_invalid_max_new_tokens(self):
         """Test invalid max_new_tokens."""
-        with pytest.raises(ConfigValidationError):
+        from pydantic import ValidationError
+        with pytest.raises(ValidationError):
             GenerationConfig(max_new_tokens=0)
 
     def test_invalid_temperature(self):
         """Test invalid temperature."""
-        with pytest.raises(ConfigValidationError):
+        from pydantic import ValidationError
+        with pytest.raises(ValidationError):
             GenerationConfig(temperature=-0.1)
 
     def test_invalid_top_p(self):
         """Test invalid top_p."""
-        with pytest.raises(ConfigValidationError):
+        from pydantic import ValidationError
+        with pytest.raises(ValidationError):
             GenerationConfig(top_p=1.5)
 
     def test_temperature_zero_greedy(self):
@@ -129,7 +132,8 @@ class TestVLLMConfig:
 
     def test_invalid_parallel_size(self):
         """Test invalid tensor parallel size (not power of 2)."""
-        with pytest.raises(ConfigValidationError):
+        from pydantic import ValidationError
+        with pytest.raises(ValidationError):
             VLLMConfig(tensor_parallel_size=3)
 
     def test_valid_parallel_sizes(self):
@@ -140,7 +144,8 @@ class TestVLLMConfig:
 
     def test_invalid_gpu_memory_utilization(self):
         """Test invalid GPU memory utilization."""
-        with pytest.raises(ConfigValidationError):
+        from pydantic import ValidationError
+        with pytest.raises(ValidationError):
             VLLMConfig(gpu_memory_utilization=1.5)
 
     def test_total_gpus_property(self):

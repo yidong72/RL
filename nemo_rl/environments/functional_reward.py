@@ -390,15 +390,16 @@ class FunctionalRewardWrapper(EnvironmentInterface[None]):
         if self._is_async:
             # Run async reward computation
             loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
             try:
-                rewards = loop.run_until_complete(
-                    asyncio.gather(
+                async def gather_rewards():
+                    return await asyncio.gather(
                         *[
                             self._compute_single_reward_async(p, r)
                             for p, r in zip(prompts, responses)
                         ]
                     )
-                )
+                rewards = loop.run_until_complete(gather_rewards())
             finally:
                 loop.close()
         else:

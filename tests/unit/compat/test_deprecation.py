@@ -50,6 +50,14 @@ class TestDeprecatedImport:
             
             assert MIGRATION_GUIDE_URL in str(w[0].message)
 
+    def test_custom_removal_version(self):
+        """Test that custom removal_version is included in warning."""
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            deprecated_import("OldName", "NewName", "new.module", removal_version="3.5")
+            
+            assert "3.5" in str(w[0].message)
+
 
 class TestDeprecatedFunction:
     """Tests for deprecated_function decorator."""
@@ -79,6 +87,30 @@ class TestDeprecatedFunction:
         
         assert my_function.__name__ == "my_function"
         assert my_function.__doc__ == "My docstring."
+
+    def test_extra_message_included(self):
+        """Test that extra_message is included in warning."""
+        @deprecated_function("new_func", "new.module", extra_message="Additional info.")
+        def old_func():
+            return "result"
+        
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            old_func()
+            
+            assert "Additional info." in str(w[0].message)
+
+    def test_custom_removal_version(self):
+        """Test that custom removal_version is included in warning."""
+        @deprecated_function("new_func", "new.module", removal_version="3.0")
+        def old_func():
+            return "result"
+        
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            old_func()
+            
+            assert "3.0" in str(w[0].message)
 
 
 class TestDeprecatedClass:
@@ -121,6 +153,34 @@ class TestDeprecatedMethod:
             assert len(w) == 1
             assert "old_method" in str(w[0].message)
             assert "new_method" in str(w[0].message)
+
+    def test_extra_message_included(self):
+        """Test that extra_message is included in warning."""
+        class MyClass:
+            @deprecated_method("new_method", extra_message="Use the new API.")
+            def old_method(self):
+                return "result"
+        
+        obj = MyClass()
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            obj.old_method()
+            
+            assert "Use the new API." in str(w[0].message)
+
+    def test_custom_removal_version(self):
+        """Test that custom removal_version is included."""
+        class MyClass:
+            @deprecated_method("new_method", removal_version="4.0")
+            def old_method(self):
+                return "result"
+        
+        obj = MyClass()
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            obj.old_method()
+            
+            assert "4.0" in str(w[0].message)
 
 
 class TestDeprecatedParameter:

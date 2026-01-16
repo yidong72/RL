@@ -162,7 +162,7 @@ def test_exit_on_timeout(mock_components, capsys):
     sft_save_state = _default_sft_save_state()
 
     # Mock TimeoutChecker to return False for first 7 checks, then True (timeout)
-    with patch("nemo_rl.algorithms.sft.TimeoutChecker") as mock_timeout_class:
+    with patch("nemo_rl.algorithms.sft_legacy.TimeoutChecker") as mock_timeout_class:
         mock_timeout_instance = MagicMock()
         # Create a side_effect that returns False 7 times, then True
         check_results = [False] * 7 + [True]
@@ -253,3 +253,135 @@ def test_training_with_negative_val_period(mock_components):
     )
 
     assert mock_components["policy"].train.call_count == 3
+
+
+class TestSFTLoss:
+    """Tests for SFT loss (cross-entropy) computation (AC-8.1)."""
+
+    @pytest.fixture
+    def device(self):
+        """Return appropriate device for testing."""
+        return torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+    def test_nll_loss_basic_computation(self, device):
+        """Test that NLLLoss computes cross-entropy correctly."""
+        loss_fn = NLLLoss()
+        
+        # Create mock logits and data
+        batch_size = 2
+        seq_len = 5
+        vocab_size = 10
+        
+        # Create logits with known values - move to device
+        next_token_logits = torch.randn(batch_size, seq_len, vocab_size, device=device)
+        
+        # Create input ids (next tokens to predict) - move to device
+        input_ids = torch.randint(0, vocab_size, (batch_size, seq_len), device=device)
+        
+        # Token mask and sample mask - move to device
+        token_mask = torch.ones(batch_size, seq_len, device=device)
+        sample_mask = torch.ones(batch_size, device=device)
+        
+        from nemo_rl.distributed.batched_data_dict import BatchedDataDict
+        data = BatchedDataDict({
+            "input_ids": input_ids,
+            "token_mask": token_mask,
+            "sample_mask": sample_mask,
+        })
+        
+        global_valid_toks = torch.tensor(float((batch_size * (seq_len - 1))), device=device)
+        
+        # Compute loss
+        loss, metrics = loss_fn(
+            next_token_logits,
+            data,
+            global_valid_seqs=None,
+            global_valid_toks=global_valid_toks,
+        )
+        
+        # Verify loss is a scalar and is positive
+        assert loss.ndim == 0, "Loss should be a scalar"
+        assert loss.item() > 0, "Cross-entropy loss should be positive"
+        assert "loss" in metrics
+        assert "num_unmasked_tokens" in metrics
+
+    def test_nll_loss_with_masked_tokens(self, device):
+        """Test NLLLoss correctly handles masked tokens."""
+        loss_fn = NLLLoss()
+        
+        batch_size = 2
+        seq_len = 5
+        vocab_size = 10
+        
+        # Create logits - move to device
+        next_token_logits = torch.randn(batch_size, seq_len, vocab_size, device=device)
+        input_ids = torch.randint(0, vocab_size, (batch_size, seq_len), device=device)
+        
+        # Mask half the tokens
+        token_mask = torch.zeros(batch_size, seq_len, device=device)
+        token_mask[:, :3] = 1  # Only first 3 tokens are valid
+        sample_mask = torch.ones(batch_size, device=device)
+        
+        from nemo_rl.distributed.batched_data_dict import BatchedDataDict
+        data = BatchedDataDict({
+            "input_ids": input_ids,
+            "token_mask": token_mask,
+            "sample_mask": sample_mask,
+        })
+        
+        # Global valid tokens is now 2 * 2 = 4 (accounting for shift by 1)
+        global_valid_toks = torch.tensor(4.0, device=device)
+        
+        loss, metrics = loss_fn(
+            next_token_logits,
+            data,
+            global_valid_seqs=None,
+            global_valid_toks=global_valid_toks,
+        )
+        
+        assert loss.ndim == 0
+        assert metrics["num_unmasked_tokens"] == 4.0  # 2 batches * 2 valid tokens each
+
+    def test_nll_loss_produces_valid_gradients(self, device):
+        """Test that NLLLoss produces valid gradients for backprop."""
+        loss_fn = NLLLoss()
+        
+        batch_size = 2
+        seq_len = 5
+        vocab_size = 10
+        
+        next_token_logits = torch.randn(batch_size, seq_len, vocab_size, device=device, requires_grad=True)
+        input_ids = torch.randint(0, vocab_size, (batch_size, seq_len), device=device)
+        token_mask = torch.ones(batch_size, seq_len, device=device)
+        sample_mask = torch.ones(batch_size, device=device)
+        
+        from nemo_rl.distributed.batched_data_dict import BatchedDataDict
+        data = BatchedDataDict({
+            "input_ids": input_ids,
+            "token_mask": token_mask,
+            "sample_mask": sample_mask,
+        })
+        
+        global_valid_toks = torch.tensor(float(batch_size * (seq_len - 1)), device=device)
+        
+        loss, _ = loss_fn(
+            next_token_logits,
+            data,
+            global_valid_seqs=None,
+            global_valid_toks=global_valid_toks,
+        )
+        
+        # Verify gradients flow
+        loss.backward()
+        assert next_token_logits.grad is not None
+        assert not torch.isnan(next_token_logits.grad).any()
+
+    def test_sft_loss_class_inherits_nll_loss(self):
+        """Test that SFTLoss is a subclass of NLLLoss."""
+        from nemo_rl.algorithms.sft.loss import SFTLoss, create_sft_loss_function
+        
+        loss_fn = create_sft_loss_function()
+        assert isinstance(loss_fn, NLLLoss)
+        
+        sft_loss = SFTLoss()
+        assert isinstance(sft_loss, NLLLoss)

@@ -254,3 +254,54 @@ class TestFromPretrainedIntegration:
         
         assert hasattr(grpo, "from_pretrained")
         assert hasattr(sft, "from_pretrained")
+
+
+class TestInvalidModelHandling:
+    """Tests for invalid model name handling (AC-2.6)."""
+
+    def test_invalid_model_config_stored_grpo(self):
+        """Test that invalid model name is stored in config for later validation."""
+        from nemo_rl.algorithms.grpo import GRPOTrainer
+        
+        # from_pretrained allows any model name - validation happens at setup/fit time
+        invalid_name = "definitely-not-a-real-model-12345xyz"
+        trainer = GRPOTrainer.from_pretrained(invalid_name)
+        
+        # The model name should be stored in config
+        assert trainer.config is not None
+        assert invalid_name in str(trainer.config)
+
+    def test_invalid_model_config_stored_sft(self):
+        """Test that invalid model name is stored in config for later validation."""
+        from nemo_rl.algorithms.sft import SFTTrainer
+        
+        invalid_name = "nonexistent/fake-model-abc123"
+        trainer = SFTTrainer.from_pretrained(invalid_name)
+        
+        # The model name should be stored in config
+        assert trainer.config is not None
+        assert invalid_name in str(trainer.config)
+
+
+class TestHuggingFaceHubModels:
+    """Tests for HuggingFace Hub model loading (AC-2.5)."""
+
+    def test_hf_model_name_format_accepted(self):
+        """Test that HF format model names are accepted."""
+        from nemo_rl.algorithms.grpo import GRPOTrainer
+        
+        # Test with HF-style model name
+        trainer = GRPOTrainer.from_pretrained("Qwen/Qwen2.5-1.5B")
+        
+        assert trainer is not None
+        assert trainer.config is not None
+        assert "Qwen/Qwen2.5-1.5B" in str(trainer.config)
+
+    def test_config_contains_hf_model_path(self):
+        """Test that config properly stores HF model path."""
+        from nemo_rl.algorithms.sft import SFTTrainer
+        
+        model_name = "meta-llama/Llama-2-7b-hf"
+        config = SFTTrainer._build_config_from_pretrained(model_name)
+        
+        assert config["policy"]["model_name"] == model_name

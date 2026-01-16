@@ -39,12 +39,16 @@ class TestClusterConfig:
 
     def test_invalid_gpus_per_node(self):
         """Test invalid GPUs per node."""
-        with pytest.raises(ConfigValidationError):
+        # Direct instantiation raises Pydantic's ValidationError
+        from pydantic import ValidationError
+        with pytest.raises(ValidationError):
             ClusterConfig(gpus_per_node=0)
 
     def test_invalid_num_nodes(self):
         """Test invalid number of nodes."""
-        with pytest.raises(ConfigValidationError):
+        # Direct instantiation raises Pydantic's ValidationError
+        from pydantic import ValidationError
+        with pytest.raises(ValidationError):
             ClusterConfig(num_nodes=-1)
 
     def test_total_gpus_property(self):

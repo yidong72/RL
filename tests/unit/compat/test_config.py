@@ -157,6 +157,107 @@ class TestConvertOldConfigToNew:
             assert new_config["policy"]["optimizer"]["name"] == "adamw"
             assert new_config["policy"]["optimizer"]["kwargs"]["lr"] == 1e-5
 
+    def test_converts_sft_config(self):
+        """Test that SFT-specific config is converted."""
+        old_config = {
+            "policy": {"model_name": "test"},
+            "sft": {
+                "max_num_epochs": 3,
+                "max_num_steps": 500,
+                "val_period": 100,
+                "seed": 42,
+            }
+        }
+        
+        with warnings.catch_warnings(record=True):
+            warnings.simplefilter("always")
+            new_config = convert_old_config_to_new(old_config, "sft")
+            
+            assert new_config["max_num_epochs"] == 3
+            assert new_config["max_num_steps"] == 500
+            assert new_config["val_period"] == 100
+            assert new_config["seed"] == 42
+
+    def test_converts_dpo_config(self):
+        """Test that DPO-specific config is converted."""
+        old_config = {
+            "policy": {"model_name": "test"},
+            "dpo": {
+                "max_num_epochs": 2,
+                "beta": 0.1,
+                "label_smoothing": 0.01,
+            }
+        }
+        
+        with warnings.catch_warnings(record=True):
+            warnings.simplefilter("always")
+            new_config = convert_old_config_to_new(old_config, "dpo")
+            
+            assert new_config["max_num_epochs"] == 2
+            assert new_config["loss_fn"]["beta"] == 0.1
+            assert new_config["loss_fn"]["label_smoothing"] == 0.01
+
+    def test_converts_cluster_config(self):
+        """Test that cluster config is converted."""
+        old_config = {
+            "policy": {"model_name": "test"},
+            "cluster": {
+                "num_nodes": 4,
+                "gpus_per_node": 8,
+                "master_addr": "localhost",
+                "master_port": 29500,
+            }
+        }
+        
+        with warnings.catch_warnings(record=True):
+            warnings.simplefilter("always")
+            new_config = convert_old_config_to_new(old_config, "grpo")
+            
+            assert new_config["cluster"]["num_nodes"] == 4
+            assert new_config["cluster"]["gpus_per_node"] == 8
+            assert new_config["cluster"]["master_addr"] == "localhost"
+            assert new_config["cluster"]["master_port"] == 29500
+
+    def test_converts_checkpoint_config(self):
+        """Test that checkpoint config is converted."""
+        old_config = {
+            "policy": {"model_name": "test"},
+            "checkpointing": {
+                "enabled": True,
+                "checkpoint_dir": "/checkpoints",
+                "save_period": 500,
+                "keep_top_k": 3,
+                "metric_name": "loss",
+                "higher_is_better": False,
+            }
+        }
+        
+        with warnings.catch_warnings(record=True):
+            warnings.simplefilter("always")
+            new_config = convert_old_config_to_new(old_config, "grpo")
+            
+            assert new_config["checkpointing"]["enabled"] is True
+            assert new_config["checkpointing"]["checkpoint_dir"] == "/checkpoints"
+            assert new_config["checkpointing"]["save_period"] == 500
+            assert new_config["checkpointing"]["keep_top_k"] == 3
+
+    def test_converts_logger_config(self):
+        """Test that logger config is passed through."""
+        old_config = {
+            "policy": {"model_name": "test"},
+            "logger": {
+                "tensorboard": True,
+                "wandb": False,
+            }
+        }
+        
+        with warnings.catch_warnings(record=True):
+            warnings.simplefilter("always")
+            new_config = convert_old_config_to_new(old_config, "grpo")
+            
+            assert new_config["logger"]["tensorboard"] is True
+            assert new_config["logger"]["wandb"] is False
+
 
 class TestOmegaConfAdapter:
     """Tests for OmegaConfAdapter class."""

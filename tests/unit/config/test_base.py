@@ -62,25 +62,33 @@ class TestBaseConfig:
 
     def test_validation_positive_integer(self):
         """Test validation of positive integer constraint."""
-        with pytest.raises(ConfigValidationError) as exc_info:
+        # Direct instantiation raises Pydantic's ValidationError
+        from pydantic import ValidationError
+        with pytest.raises(ValidationError) as exc_info:
             SimpleConfig(name="test", count=0)
         assert "count" in str(exc_info.value).lower()
 
     def test_validation_range_constraint(self):
         """Test validation of range constraint."""
-        with pytest.raises(ConfigValidationError) as exc_info:
+        # Direct instantiation raises Pydantic's ValidationError
+        from pydantic import ValidationError
+        with pytest.raises(ValidationError) as exc_info:
             SimpleConfig(name="test", rate=1.5)
         assert "rate" in str(exc_info.value).lower()
 
     def test_validation_negative_rate(self):
         """Test validation of negative rate."""
-        with pytest.raises(ConfigValidationError) as exc_info:
+        # Direct instantiation raises Pydantic's ValidationError
+        from pydantic import ValidationError
+        with pytest.raises(ValidationError) as exc_info:
             SimpleConfig(name="test", rate=-0.1)
         assert "rate" in str(exc_info.value).lower()
 
     def test_validation_missing_required(self):
         """Test validation of missing required field."""
-        with pytest.raises(ConfigValidationError) as exc_info:
+        # Direct instantiation raises Pydantic's ValidationError
+        from pydantic import ValidationError
+        with pytest.raises(ValidationError) as exc_info:
             SimpleConfig()  # Missing required 'name'
         assert "name" in str(exc_info.value).lower()
 

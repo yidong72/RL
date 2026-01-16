@@ -76,10 +76,12 @@ from nemo_rl.algorithms.grpo.utils import (
 # This ensures existing code continues to work
 from nemo_rl.algorithms.grpo_legacy import (
     _default_grpo_save_state,
+    _should_use_async_rollouts,
     async_grpo_train,
     dynamic_sampling,
     grpo_train,
     normalize_advantages_with_epsilon,  # Use legacy version for backward compat
+    refit_policy_generation,
     setup,
     validate,
 )
@@ -123,5 +125,7 @@ __all__ = [
     "async_grpo_train",
     "validate",
     "_default_grpo_save_state",
+    "_should_use_async_rollouts",
+    "refit_policy_generation",
     "dynamic_sampling",
 ]

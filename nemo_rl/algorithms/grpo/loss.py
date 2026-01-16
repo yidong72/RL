@@ -70,13 +70,63 @@ def normalize_advantages_with_epsilon(
 
 
 def scale_rewards(
+    repeated_batch: BatchedDataDict,
+    reward_scaling_cfg: dict,
+) -> BatchedDataDict:
+    """Linearly scales rewards from a source range to a target range.
+
+    If `reward_scaling.enabled` is True, each reward in `repeated_batch["total_reward"]`
+    is clamped to the configured source interval [source_min, source_max] and then
+    rescaled to the target interval [target_min, target_max].
+
+    Default configuration:
+        source_min = 0.0
+        source_max = 1.0
+        target_min = 0.0
+        target_max = 1.0
+
+    Args:
+        repeated_batch: BatchedDataDict containing "total_reward" field.
+        reward_scaling_cfg: Configuration dict with enabled, source_min, source_max,
+            target_min, target_max fields.
+
+    Returns:
+        The same batch with scaled rewards (modified in-place).
+    """
+    if reward_scaling_cfg["enabled"]:
+        rewards = repeated_batch["total_reward"]
+        source_min = float(reward_scaling_cfg["source_min"])
+        source_max = float(reward_scaling_cfg["source_max"])
+        target_min = float(reward_scaling_cfg["target_min"])
+        target_max = float(reward_scaling_cfg["target_max"])
+
+        # Detect out-of-range values
+        out_of_range_mask = (rewards < source_min) | (rewards > source_max)
+        if torch.any(out_of_range_mask):
+            print(
+                f"[reward_scaling] WARNING: {int(out_of_range_mask.sum())} rewards "
+                f"are outside the configured source range [{source_min}, {source_max}]. "
+                f"Values will be clipped before scaling."
+            )
+
+        # Clamp and scale
+        rewards = torch.clamp(rewards, min=source_min, max=source_max)
+        scaled_rewards = target_min + (rewards - source_min) / (
+            source_max - source_min
+        ) * (target_max - target_min)
+        repeated_batch["total_reward"] = scaled_rewards
+
+    return repeated_batch
+
+
+def _scale_rewards_tensor(
     rewards: torch.Tensor,
     source_min: float = 0.0,
     source_max: float = 1.0,
     target_min: float = 0.0,
     target_max: float = 1.0,
 ) -> torch.Tensor:
-    """Scale rewards from source range to target range.
+    """Scale rewards tensor from source range to target range.
 
     Clamps rewards to [source_min, source_max] and linearly maps
     to [target_min, target_max].

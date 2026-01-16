@@ -130,6 +130,7 @@ class TestLoggerFacade:
     def test_debug_logging(self, caplog):
         """Test debug level logging."""
         facade = LoggerFacade("test_debug")
+        facade.set_level(LogLevel.DEBUG)  # Set logger level to DEBUG
         with caplog.at_level(logging.DEBUG):
             facade.debug("Test debug message")
         assert "Test debug message" in caplog.text

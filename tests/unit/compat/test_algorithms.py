@@ -82,6 +82,29 @@ class TestSFTCompat:
             assert "SFT" in str(deprecation_warnings[0].message)
             assert "SFTTrainer" in str(deprecation_warnings[0].message)
 
+    def test_sft_from_config_emits_warning(self):
+        """Test that SFT.from_config() emits deprecation warning."""
+        class MockConfig:
+            def __init__(self):
+                self.policy = type("Policy", (), {"model_name": "test-model"})()
+            
+            def to_container(self, resolve=True):
+                return {"policy": {"model_name": "test-model"}}
+        
+        mock_cfg = MockConfig()
+        
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            try:
+                sft = SFT.from_config(mock_cfg)
+            except Exception:
+                pass
+            
+            deprecation_warnings = [x for x in w if issubclass(x.category, DeprecationWarning)]
+            assert len(deprecation_warnings) >= 1
+            from_config_warnings = [x for x in deprecation_warnings if "from_config" in str(x.message)]
+            assert len(from_config_warnings) >= 1
+
 
 class TestDPOCompat:
     """Tests for DPO backward compatibility class."""
@@ -99,6 +122,47 @@ class TestDPOCompat:
             assert len(deprecation_warnings) >= 1
             assert "DPO" in str(deprecation_warnings[0].message)
             assert "DPOTrainer" in str(deprecation_warnings[0].message)
+
+    def test_dpo_from_config_emits_warning(self):
+        """Test that DPO.from_config() emits deprecation warning."""
+        class MockConfig:
+            def __init__(self):
+                self.policy = type("Policy", (), {"model_name": "test-model"})()
+            
+            def to_container(self, resolve=True):
+                return {"policy": {"model_name": "test-model"}, "dpo": {"beta": 0.1}}
+        
+        mock_cfg = MockConfig()
+        
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            try:
+                dpo = DPO.from_config(mock_cfg)
+            except Exception:
+                pass
+            
+            deprecation_warnings = [x for x in w if issubclass(x.category, DeprecationWarning)]
+            assert len(deprecation_warnings) >= 1
+            from_config_warnings = [x for x in deprecation_warnings if "from_config" in str(x.message)]
+            assert len(from_config_warnings) >= 1
+
+    def test_dpo_from_config_with_to_dict(self):
+        """Test DPO.from_config() with object using to_dict method."""
+        class MockConfig:
+            def to_dict(self):
+                return {"policy": {"model_name": "test-model"}}
+        
+        mock_cfg = MockConfig()
+        
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            try:
+                dpo = DPO.from_config(mock_cfg)
+            except Exception:
+                pass
+            
+            deprecation_warnings = [x for x in w if issubclass(x.category, DeprecationWarning)]
+            assert len(deprecation_warnings) >= 1
 
 
 class TestDeprecatedFunctions:
@@ -153,3 +217,51 @@ class TestDeprecatedFunctions:
             deprecation_warnings = [x for x in w if issubclass(x.category, DeprecationWarning)]
             assert len(deprecation_warnings) >= 1
             assert "dpo_train" in str(deprecation_warnings[0].message)
+
+    def test_grpo_train_includes_migration_guide(self):
+        """Test that grpo_train() warning includes migration guide URL."""
+        from nemo_rl.compat.algorithms import grpo_train
+        from nemo_rl.compat.deprecation import MIGRATION_GUIDE_URL
+        
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            try:
+                grpo_train(model="test", dataset="test", reward_fn=lambda p, r: 1.0)
+            except Exception:
+                pass
+            
+            deprecation_warnings = [x for x in w if issubclass(x.category, DeprecationWarning)]
+            assert len(deprecation_warnings) >= 1
+            assert MIGRATION_GUIDE_URL in str(deprecation_warnings[0].message)
+
+    def test_sft_train_includes_migration_guide(self):
+        """Test that sft_train() warning includes migration guide URL."""
+        from nemo_rl.compat.algorithms import sft_train
+        from nemo_rl.compat.deprecation import MIGRATION_GUIDE_URL
+        
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            try:
+                sft_train(model="test", dataset="test")
+            except Exception:
+                pass
+            
+            deprecation_warnings = [x for x in w if issubclass(x.category, DeprecationWarning)]
+            assert len(deprecation_warnings) >= 1
+            assert MIGRATION_GUIDE_URL in str(deprecation_warnings[0].message)
+
+    def test_dpo_train_includes_migration_guide(self):
+        """Test that dpo_train() warning includes migration guide URL."""
+        from nemo_rl.compat.algorithms import dpo_train
+        from nemo_rl.compat.deprecation import MIGRATION_GUIDE_URL
+        
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            try:
+                dpo_train(model="test", dataset="test")
+            except Exception:
+                pass
+            
+            deprecation_warnings = [x for x in w if issubclass(x.category, DeprecationWarning)]
+            assert len(deprecation_warnings) >= 1
+            assert MIGRATION_GUIDE_URL in str(deprecation_warnings[0].message)

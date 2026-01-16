@@ -31,10 +31,10 @@ class TestDataModule:
     def test_datamodule_is_abstract(self):
         """Test that DataModule cannot be instantiated directly."""
         # DataModule is abstract, should not be instantiated
-        # But it can be if you don't call abstract methods
-        dm = DataModule.__new__(DataModule)
-        dm.__init__(batch_size=32)
-        assert dm.batch_size == 32
+        # In Python 3.12+, __new__ also checks for abstract methods
+        import pytest
+        with pytest.raises(TypeError, match="abstract"):
+            DataModule.__new__(DataModule)
 
     def test_datamodule_default_values(self):
         """Test default parameter values."""

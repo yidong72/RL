@@ -55,12 +55,14 @@ class TestLoRAConfig:
 
     def test_invalid_dim(self):
         """Test invalid dim value."""
-        with pytest.raises(ConfigValidationError):
+        from pydantic import ValidationError
+        with pytest.raises(ValidationError):
             LoRAConfig(dim=0)
 
     def test_invalid_dropout(self):
         """Test invalid dropout value."""
-        with pytest.raises(ConfigValidationError):
+        from pydantic import ValidationError
+        with pytest.raises(ValidationError):
             LoRAConfig(dropout=1.5)
 
 
@@ -118,7 +120,8 @@ class TestDTensorConfig:
 
     def test_invalid_parallel_size(self):
         """Test invalid parallel size (not power of 2)."""
-        with pytest.raises(ConfigValidationError):
+        from pydantic import ValidationError
+        with pytest.raises(ValidationError):
             DTensorConfig(tensor_parallel_size=3)
 
     def test_parallel_size_power_of_two(self):
@@ -188,7 +191,8 @@ class TestPolicyConfig:
 
     def test_invalid_batch_size(self):
         """Test invalid batch size."""
-        with pytest.raises(ConfigValidationError):
+        from pydantic import ValidationError
+        with pytest.raises(ValidationError):
             PolicyConfig(model_name="gpt2", train_global_batch_size=0)
 
     def test_tensor_parallel_property(self):

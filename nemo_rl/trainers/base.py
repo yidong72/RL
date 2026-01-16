@@ -746,11 +746,7 @@ class BaseTrainer(ABC):
 
         self._logger = LoggerFacade(
             name=self.__class__.__name__,
-            wandb_enabled=logger_config.wandb_enabled if logger_config else False,
-            tensorboard_enabled=logger_config.tensorboard_enabled
-            if logger_config
-            else True,
-            log_dir=logger_config.tensorboard_dir if logger_config else "logs",
+            config=logger_config,
         )
 
         if self._logger:
