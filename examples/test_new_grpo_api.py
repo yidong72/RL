@@ -49,10 +49,11 @@ def main():
     # Import the new API
     from nemo_rl.algorithms.grpo import GRPOTrainer
 
-    # Model path - use local cache if available, otherwise HuggingFace name
+    # Model path - use local cache if fully available, otherwise HuggingFace name
     import os
     local_model_path = "/lustre/fsw/portfolios/nvr/users/yidong/data/models/huggingface_hub/hub/models--deepseek-ai--DeepSeek-R1-Distill-Qwen-1.5B/snapshots/ad9f0ae0864d7fbcd1cd905e3c6c5b069cc8b562"
-    if os.path.exists(local_model_path):
+    # Check if model is fully downloaded (has config.json)
+    if os.path.exists(local_model_path) and os.path.exists(os.path.join(local_model_path, "config.json")):
         model_name = local_model_path
         print(f"Using local model: {model_name}")
     else:
