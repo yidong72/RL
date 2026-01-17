@@ -23,7 +23,7 @@ from nemo_rl.data import DataConfig
 from nemo_rl.distributed.virtual_cluster import ClusterConfig
 from nemo_rl.models.policy import PolicyConfig
 from nemo_rl.utils.checkpoint import CheckpointingConfig
-from nemo_rl.utils.logger import LoggerConfig
+from nemo_rl.utils.logger_types import LoggerConfig
 
 
 class RewardScalingConfig(TypedDict):

@@ -352,7 +352,8 @@ class GRPOTrainer:
                 "save_period": kwargs.get("save_period", 100),
                 "checkpoint_must_save_by": kwargs.get("checkpoint_must_save_by", None),
                 "metric_name": None,  # Metric to use for best checkpoint selection
-                "metric_mode": "max",  # 'max' or 'min'
+                "higher_is_better": True,  # Whether higher metric values are better
+                "keep_top_k": kwargs.get("keep_top_k", 3),  # Keep top K checkpoints
             },
         }
 

@@ -31,21 +31,41 @@ Example:
     >>> trainer.fit(dataset)
 """
 
-from nemo_rl.algorithms.rollout import (
-    RolloutEngine,
-    RolloutResult,
-    SamplingParams,
-    create_rollout_engine,
-)
+# Import only trainers directly - they have minimal dependencies
+from nemo_rl.algorithms.grpo import GRPOTrainer
+from nemo_rl.algorithms.sft import SFTTrainer
+from nemo_rl.algorithms.dpo import DPOTrainer
 
-# GRPO exports (convenient access)
-from nemo_rl.algorithms.grpo import GRPOTrainer, GRPOConfig
 
-# SFT exports (convenient access)
-from nemo_rl.algorithms.sft import SFTTrainer, SFTConfig
+def __getattr__(name: str):
+    """Lazy import of algorithm components to avoid heavy import chain."""
+    # Rollout components
+    if name in ("RolloutEngine", "RolloutResult", "SamplingParams", "create_rollout_engine"):
+        from nemo_rl.algorithms.rollout import (
+            RolloutEngine, RolloutResult, SamplingParams, create_rollout_engine,
+        )
+        return {
+            "RolloutEngine": RolloutEngine,
+            "RolloutResult": RolloutResult,
+            "SamplingParams": SamplingParams,
+            "create_rollout_engine": create_rollout_engine,
+        }[name]
+    
+    # Config classes - lazy load to avoid heavy imports
+    if name == "GRPOConfig":
+        from nemo_rl.algorithms.grpo import GRPOConfig
+        return GRPOConfig
+    
+    if name == "SFTConfig":
+        from nemo_rl.algorithms.sft import SFTConfig
+        return SFTConfig
+    
+    if name == "DPOConfig":
+        from nemo_rl.algorithms.dpo import DPOConfig
+        return DPOConfig
+    
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
-# DPO exports (convenient access)
-from nemo_rl.algorithms.dpo import DPOTrainer, DPOConfig
 
 __all__ = [
     # Rollout

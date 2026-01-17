@@ -415,7 +415,7 @@ class LoggingCallback(Callback):
             logger.info(f"Step {step} - {self._format_metrics(filtered)}")
         
         # Log to trainer's logger if available
-        if trainer.logger is not None:
+        if trainer is not None and trainer.logger is not None:
             trainer.logger.log_metrics(filtered, step=step)
 
 

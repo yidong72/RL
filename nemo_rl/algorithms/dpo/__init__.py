@@ -39,33 +39,53 @@ Example (backward compatible):
     >>> dpo_train(...)
 """
 
-# New modular exports
-from nemo_rl.algorithms.dpo.config import (
-    DPOConfig,
-    DPOSaveState,
-    DPOValMetrics,
-    MasterConfig,
-    default_dpo_save_state,
-)
-from nemo_rl.algorithms.dpo.data import (
-    add_ref_logprobs_to_batch,
-    prepare_preference_batch,
-)
-from nemo_rl.algorithms.dpo.loss import (
-    DPOLoss,
-    create_dpo_loss_function,
-)
+# Import only the trainer directly - it has minimal dependencies
 from nemo_rl.algorithms.dpo.trainer import DPOTrainer
 
-# Backward compatibility: re-export from original dpo.py
-from nemo_rl.algorithms.dpo_legacy import (
-    _default_dpo_save_state,
-    add_ref_logprobs_to_data,
-    dpo_train,
-    setup,
-    validate,
-    validate_one_dataset,
-)
+
+def __getattr__(name: str):
+    """Lazy import of DPO components to avoid heavy import chain."""
+    # Config classes
+    if name in ("DPOConfig", "DPOSaveState", "DPOValMetrics", "MasterConfig", "default_dpo_save_state"):
+        from nemo_rl.algorithms.dpo.config import (
+            DPOConfig, DPOSaveState, DPOValMetrics, MasterConfig, default_dpo_save_state,
+        )
+        return {
+            "DPOConfig": DPOConfig,
+            "DPOSaveState": DPOSaveState,
+            "DPOValMetrics": DPOValMetrics,
+            "MasterConfig": MasterConfig,
+            "default_dpo_save_state": default_dpo_save_state,
+        }[name]
+    
+    # Data functions
+    if name in ("add_ref_logprobs_to_batch", "prepare_preference_batch"):
+        from nemo_rl.algorithms.dpo.data import add_ref_logprobs_to_batch, prepare_preference_batch
+        return {
+            "add_ref_logprobs_to_batch": add_ref_logprobs_to_batch,
+            "prepare_preference_batch": prepare_preference_batch,
+        }[name]
+    
+    # Loss functions
+    if name in ("DPOLoss", "create_dpo_loss_function"):
+        from nemo_rl.algorithms.dpo.loss import DPOLoss, create_dpo_loss_function
+        return {"DPOLoss": DPOLoss, "create_dpo_loss_function": create_dpo_loss_function}[name]
+    
+    # Legacy API (backward compatibility)
+    if name in ("_default_dpo_save_state", "add_ref_logprobs_to_data", "dpo_train", "setup", "validate", "validate_one_dataset"):
+        from nemo_rl.algorithms.dpo_legacy import (
+            _default_dpo_save_state, add_ref_logprobs_to_data, dpo_train, setup, validate, validate_one_dataset,
+        )
+        return {
+            "_default_dpo_save_state": _default_dpo_save_state,
+            "add_ref_logprobs_to_data": add_ref_logprobs_to_data,
+            "dpo_train": dpo_train,
+            "setup": setup,
+            "validate": validate,
+            "validate_one_dataset": validate_one_dataset,
+        }[name]
+    
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 __all__ = [
     # New modular API

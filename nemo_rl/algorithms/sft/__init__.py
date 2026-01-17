@@ -39,30 +39,47 @@ Example (backward compatible):
     >>> sft_train(...)
 """
 
-# New modular exports
-from nemo_rl.algorithms.sft.config import (
-    MasterConfig,
-    SFTConfig,
-    SFTSaveState,
-    default_sft_save_state,
-)
-from nemo_rl.algorithms.sft.data import (
-    prepare_batch_for_sft,
-)
-from nemo_rl.algorithms.sft.loss import (
-    SFTLoss,
-    create_sft_loss_function,
-)
+# Import only the trainer directly - it has minimal dependencies
 from nemo_rl.algorithms.sft.trainer import SFTTrainer
 
-# Backward compatibility: re-export from original sft.py
-# This ensures existing code continues to work
-from nemo_rl.algorithms.sft_legacy import (
-    _default_sft_save_state,
-    setup,
-    sft_train,
-    validate,
-)
+
+def __getattr__(name: str):
+    """Lazy import of SFT components to avoid heavy import chain."""
+    # Config classes
+    if name in ("MasterConfig", "SFTConfig", "SFTSaveState", "default_sft_save_state"):
+        from nemo_rl.algorithms.sft.config import (
+            MasterConfig, SFTConfig, SFTSaveState, default_sft_save_state,
+        )
+        return {
+            "MasterConfig": MasterConfig,
+            "SFTConfig": SFTConfig,
+            "SFTSaveState": SFTSaveState,
+            "default_sft_save_state": default_sft_save_state,
+        }[name]
+    
+    # Data functions
+    if name == "prepare_batch_for_sft":
+        from nemo_rl.algorithms.sft.data import prepare_batch_for_sft
+        return prepare_batch_for_sft
+    
+    # Loss functions
+    if name in ("SFTLoss", "create_sft_loss_function"):
+        from nemo_rl.algorithms.sft.loss import SFTLoss, create_sft_loss_function
+        return {"SFTLoss": SFTLoss, "create_sft_loss_function": create_sft_loss_function}[name]
+    
+    # Legacy API (backward compatibility)
+    if name in ("_default_sft_save_state", "setup", "sft_train", "validate"):
+        from nemo_rl.algorithms.sft_legacy import (
+            _default_sft_save_state, setup, sft_train, validate,
+        )
+        return {
+            "_default_sft_save_state": _default_sft_save_state,
+            "setup": setup,
+            "sft_train": sft_train,
+            "validate": validate,
+        }[name]
+    
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 __all__ = [
     # New modular API
