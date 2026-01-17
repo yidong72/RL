@@ -255,8 +255,14 @@ class TensorboardLogger(LoggerInterface):
         Args:
             params: Dictionary of hyperparameters to log
         """
-        # Flatten the params because add_hparams does not support nested dicts
-        self.writer.add_hparams(flatten_dict(params), {})
+        try:
+            # Flatten the params because add_hparams does not support nested dicts
+            self.writer.add_hparams(flatten_dict(params), {})
+        except AttributeError as e:
+            # Handle numpy 2.0 compatibility issues with tensorboard
+            # (e.g., np.string_ was removed in NumPy 2.0)
+            import logging
+            logging.warning(f"Failed to log hyperparams to TensorBoard (numpy/tensorboard version mismatch): {e}")
 
     def log_plot(self, figure: plt.Figure, step: int, name: str) -> None:
         """Log a plot to Tensorboard.
