@@ -250,6 +250,12 @@ class GRPOTrainer:
                     "train_mb_tokens": 4096,
                     "logprob_mb_tokens": 8192,
                 },
+                "dynamic_batching": {
+                    "enabled": False,
+                    "train_mb_tokens": 4096,
+                    "logprob_mb_tokens": 8192,
+                    "sequence_length_round": 64,
+                },
                 "generation": {
                     "backend": "vllm",
                     "max_new_tokens": max_new_tokens,
