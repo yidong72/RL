@@ -499,17 +499,26 @@ class Policy(ColocatablePolicyInterface, GenerationInterface):
             gpu_idx = all_gpu_ids.index(gpu_id)
             worker_id_list[node_idx][gpu_idx].append("worker-" + str(worker_id))
 
-        from prettytable import PrettyTable
+        try:
+            from prettytable import PrettyTable
 
-        table = PrettyTable()
-        table.title = "Policy worker mapping to Nodes and GPUs"
-        table.field_names = ["Node_IP"] + [
-            "GPU_ID=" + str(gpu_id) for gpu_id in all_gpu_ids
-        ]
-        for i, node_idx in enumerate(all_node_ips):
-            row = [node_idx]
-            for j in range(len(all_gpu_ids)):
-                row.append(tuple(worker_id_list[i][j]))
-            table.add_row(row)
+            table = PrettyTable()
+            table.title = "Policy worker mapping to Nodes and GPUs"
+            table.field_names = ["Node_IP"] + [
+                "GPU_ID=" + str(gpu_id) for gpu_id in all_gpu_ids
+            ]
+            for i, node_idx in enumerate(all_node_ips):
+                row = [node_idx]
+                for j in range(len(all_gpu_ids)):
+                    row.append(tuple(worker_id_list[i][j]))
+                table.add_row(row)
 
-        print(table)
+            print(table)
+        except ImportError:
+            # Fallback if prettytable is not installed
+            print("Policy worker mapping to Nodes and GPUs:")
+            for i, node_ip in enumerate(all_node_ips):
+                for j, gpu_id in enumerate(all_gpu_ids):
+                    workers = worker_id_list[i][j]
+                    if workers:
+                        print(f"  Node {node_ip}, GPU {gpu_id}: {workers}")
