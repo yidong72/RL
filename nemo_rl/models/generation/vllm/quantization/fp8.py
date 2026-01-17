@@ -22,9 +22,30 @@ from accelerate import init_empty_weights
 from transformers import AutoConfig, AutoModel
 from vllm.model_executor.layers.fused_moe.layer import FusedMoE
 from vllm.model_executor.layers.linear import LinearBase
-from vllm.triton_utils import tl, triton
 from vllm.v1.engine.core import EngineCoreProc
 from vllm.v1.engine.utils import CoreEngineProcManager
+
+# Lazy import for triton - only needed for pow2 activation scaling
+# This avoids ImportError on vLLM versions that don't expose tl/triton in triton_utils
+_triton_imported = False
+tl = None
+triton = None
+
+def _ensure_triton_imported():
+    """Lazily import triton utilities when needed."""
+    global _triton_imported, tl, triton
+    if not _triton_imported:
+        try:
+            from vllm.triton_utils import tl as _tl, triton as _triton
+            tl = _tl
+            triton = _triton
+        except ImportError:
+            # Fallback: import triton directly
+            import triton as _triton
+            import triton.language as _tl
+            tl = _tl
+            triton = _triton
+        _triton_imported = True
 
 FP8_BLOCK_QUANT_KWARGS = {
     "activation_scheme": "dynamic",
@@ -134,13 +155,15 @@ def apply_fp8_patches(self, fp8_config):
         # These patches add support for pow2, e8 dynamic activation scalings factors which are believed to have higher
         # SNR compared to plain fp32 scaling factors. This feature is still under active research.
         if global_fp8_config.use_activation_pow2_scale:
+            # Initialize triton kernels lazily
+            _initialize_triton_kernels()
             func2_path = "vllm.model_executor.layers.quantization.utils.fp8_utils.per_token_group_quant_fp8"
             func3_path = "vllm.model_executor.layers.quantization.utils.fp8_utils._per_token_group_quant_fp8"
             func4_path = "vllm.model_executor.layers.quantization.utils.fp8_utils._per_token_group_quant_fp8_colmajor"
             patcher2 = patch(func2_path, per_token_group_quant_fp8)
-            patcher3 = patch(func3_path, _per_token_group_quant_fp8)
-            patcher4 = patch(func4_path, _per_token_group_quant_fp8_colmajor)
-            fp8_state.vllm_patches.append(patcher2, patcher3, patcher4)
+            patcher3 = patch(func3_path, _per_token_group_quant_fp8_kernel)
+            patcher4 = patch(func4_path, _per_token_group_quant_fp8_colmajor_kernel)
+            fp8_state.vllm_patches.extend([patcher2, patcher3, patcher4])
 
         # Static scales mode: patch process_weights_after_loading to preserve k_scale/v_scale for manual updates
         func5_path = "vllm.model_executor.layers.quantization.kv_cache.BaseKVCacheMethod.process_weights_after_loading"
@@ -657,128 +680,149 @@ def process_weights_after_loading_kv(self, layer) -> None:
     # Original code deleted: layer.k_scale, layer.v_scale, layer.q_scale, layer.prob_scale
 
 
-@triton.jit
-def _per_token_group_quant_fp8(
-    # Pointers to inputs and output
-    y_ptr,
-    y_q_ptr,
-    y_s_ptr,
-    group_size,
-    # Num columns of y
-    y_num_columns,
-    y_row_stride,
-    # Avoid to divide zero
-    eps,
-    # Information for float8
-    fp8_min,
-    fp8_max,
-    # Meta-parameters
-    BLOCK: tl.constexpr,
-):
-    groups_per_row = y_num_columns // group_size
-
-    # Map the program id to the row of X and Y it should compute.
-    g_id = tl.program_id(0)
-    row = g_id // groups_per_row
-    row_g_id = g_id % groups_per_row
-
-    y_ptr += (row * y_row_stride) + (row_g_id * group_size)
-    y_q_ptr += g_id * group_size
-    y_s_ptr += g_id
-
-    cols = tl.arange(0, BLOCK)  # N <= BLOCK
-    mask = cols < group_size
-
-    y = tl.load(y_ptr + cols, mask=mask, other=0.0).to(tl.float32)
-    # Quant
-    _absmax = tl.maximum(tl.max(tl.abs(y)), eps)
-
-    # pow2_scale
-    inv_scale = fp8_max / _absmax
-    exponent = tl.floor(tl.log2(inv_scale))
-    # exponent is an integer
-    exponent = tl.minimum(exponent, 126.0)
-
-    # after rounding to exponent, round back to floating
-    inv_scale_pow2 = tl.exp2(exponent)
-
-    is_nan = inv_scale_pow2 != inv_scale_pow2
-    is_inf = (inv_scale_pow2 == 1.0 / 0.0) | (inv_scale_pow2 == -1.0 / 0.0)
-
-    # If the value is NaN or infinity, default it to 1.0,
-    # otherwise keep its original value.
-    inv_scale_pow2 = tl.where(is_nan | is_inf, 1.0, inv_scale_pow2)
-    # finally uninverse
-    y_s = 1.0 / inv_scale_pow2
-
-    y_q = tl.clamp(y / y_s, fp8_min, fp8_max).to(y_q_ptr.dtype.element_ty)
-
-    tl.store(y_q_ptr + cols, y_q, mask=mask)
-    tl.store(y_s_ptr, y_s)
+# Triton-jitted functions for pow2 activation scaling
+# These are created lazily to avoid import errors on vLLM versions without triton_utils
+_triton_kernels_initialized = False
+_per_token_group_quant_fp8_kernel = None
+_per_token_group_quant_fp8_colmajor_kernel = None
 
 
-@triton.jit
-def _per_token_group_quant_fp8_colmajor(
-    # Pointers to inputs and output
-    y_ptr,
-    y_q_ptr,
-    y_s_ptr,
-    group_size,
-    # Num columns of y
-    y_num_columns,
-    y_row_stride,
-    # Stride from one column to the next of y_s
-    y_s_col_stride,
-    # Avoid to divide zero
-    eps,
-    # Information for float8
-    fp8_min,
-    fp8_max,
-    # Meta-parameters
-    BLOCK: tl.constexpr,
-):
-    groups_per_row = y_num_columns // group_size
+def _initialize_triton_kernels():
+    """Initialize triton kernels lazily when needed."""
+    global _triton_kernels_initialized
+    global _per_token_group_quant_fp8_kernel
+    global _per_token_group_quant_fp8_colmajor_kernel
+    
+    if _triton_kernels_initialized:
+        return
+    
+    _ensure_triton_imported()
+    
+    @triton.jit
+    def _per_token_group_quant_fp8_impl(
+        # Pointers to inputs and output
+        y_ptr,
+        y_q_ptr,
+        y_s_ptr,
+        group_size,
+        # Num columns of y
+        y_num_columns,
+        y_row_stride,
+        # Avoid to divide zero
+        eps,
+        # Information for float8
+        fp8_min,
+        fp8_max,
+        # Meta-parameters
+        BLOCK: tl.constexpr,
+    ):
+        groups_per_row = y_num_columns // group_size
 
-    # Map the program id to the row of X and Y it should compute.
-    g_id = tl.program_id(0)
-    row = g_id // groups_per_row
-    row_g_id = g_id % groups_per_row
+        # Map the program id to the row of X and Y it should compute.
+        g_id = tl.program_id(0)
+        row = g_id // groups_per_row
+        row_g_id = g_id % groups_per_row
 
-    y_ptr += (row * y_row_stride) + (row_g_id * group_size)
-    y_q_ptr += g_id * group_size
+        y_ptr += (row * y_row_stride) + (row_g_id * group_size)
+        y_q_ptr += g_id * group_size
+        y_s_ptr += g_id
 
-    # Convert g_id the flattened block coordinate to 2D so we can index
-    # into the output y_scales matrix
-    blocks_per_row = y_num_columns // group_size
-    scale_col = g_id % blocks_per_row
-    scale_row = g_id // blocks_per_row
-    y_s_ptr += scale_col * y_s_col_stride + scale_row
+        cols = tl.arange(0, BLOCK)  # N <= BLOCK
+        mask = cols < group_size
 
-    cols = tl.arange(0, BLOCK)  # group_size <= BLOCK
-    mask = cols < group_size
+        y = tl.load(y_ptr + cols, mask=mask, other=0.0).to(tl.float32)
+        # Quant
+        _absmax = tl.maximum(tl.max(tl.abs(y)), eps)
 
-    y = tl.load(y_ptr + cols, mask=mask, other=0.0).to(tl.float32)
-    _absmax = tl.maximum(tl.max(tl.abs(y)), eps)
+        # pow2_scale
+        inv_scale = fp8_max / _absmax
+        exponent = tl.floor(tl.log2(inv_scale))
+        # exponent is an integer
+        exponent = tl.minimum(exponent, 126.0)
 
-    # Quant pow2_scale:
-    inv_scale = fp8_max / _absmax
-    # calculate the nearest pow2 integer
-    exponent = tl.floor(tl.log2(inv_scale))
-    exponent = tl.minimum(exponent, 126.0)
-    # round inv_scale to the nearest pow2 with the exp we just calculated
-    inv_scale_pow2 = tl.exp2(exponent)
-    # If the value is NaN or infinity, default it to 1.0,
-    # otherwise keep its original value.
-    is_nan = inv_scale_pow2 != inv_scale_pow2
-    is_inf = (inv_scale_pow2 == float("inf")) | (inv_scale_pow2 == float("-inf"))
-    inv_scale_pow2 = tl.where(is_nan | is_inf, 1.0, inv_scale_pow2)
-    # finally uninverse
-    y_s = 1.0 / inv_scale_pow2
+        # after rounding to exponent, round back to floating
+        inv_scale_pow2 = tl.exp2(exponent)
 
-    y_q = tl.clamp(y / y_s, fp8_min, fp8_max).to(y_q_ptr.dtype.element_ty)
+        is_nan = inv_scale_pow2 != inv_scale_pow2
+        is_inf = (inv_scale_pow2 == 1.0 / 0.0) | (inv_scale_pow2 == -1.0 / 0.0)
 
-    tl.store(y_q_ptr + cols, y_q, mask=mask)
-    tl.store(y_s_ptr, y_s)
+        # If the value is NaN or infinity, default it to 1.0,
+        # otherwise keep its original value.
+        inv_scale_pow2 = tl.where(is_nan | is_inf, 1.0, inv_scale_pow2)
+        # finally uninverse
+        y_s = 1.0 / inv_scale_pow2
+
+        y_q = tl.clamp(y / y_s, fp8_min, fp8_max).to(y_q_ptr.dtype.element_ty)
+
+        tl.store(y_q_ptr + cols, y_q, mask=mask)
+        tl.store(y_s_ptr, y_s)
+
+    @triton.jit
+    def _per_token_group_quant_fp8_colmajor_impl(
+        # Pointers to inputs and output
+        y_ptr,
+        y_q_ptr,
+        y_s_ptr,
+        group_size,
+        # Num columns of y
+        y_num_columns,
+        y_row_stride,
+        # Stride from one column to the next of y_s
+        y_s_col_stride,
+        # Avoid to divide zero
+        eps,
+        # Information for float8
+        fp8_min,
+        fp8_max,
+        # Meta-parameters
+        BLOCK: tl.constexpr,
+    ):
+        groups_per_row = y_num_columns // group_size
+
+        # Map the program id to the row of X and Y it should compute.
+        g_id = tl.program_id(0)
+        row = g_id // groups_per_row
+        row_g_id = g_id % groups_per_row
+
+        y_ptr += (row * y_row_stride) + (row_g_id * group_size)
+        y_q_ptr += g_id * group_size
+
+        # Convert g_id the flattened block coordinate to 2D so we can index
+        # into the output y_scales matrix
+        blocks_per_row = y_num_columns // group_size
+        scale_col = g_id % blocks_per_row
+        scale_row = g_id // blocks_per_row
+        y_s_ptr += scale_col * y_s_col_stride + scale_row
+
+        cols = tl.arange(0, BLOCK)  # group_size <= BLOCK
+        mask = cols < group_size
+
+        y = tl.load(y_ptr + cols, mask=mask, other=0.0).to(tl.float32)
+        _absmax = tl.maximum(tl.max(tl.abs(y)), eps)
+
+        # Quant pow2_scale:
+        inv_scale = fp8_max / _absmax
+        # calculate the nearest pow2 integer
+        exponent = tl.floor(tl.log2(inv_scale))
+        exponent = tl.minimum(exponent, 126.0)
+        # round inv_scale to the nearest pow2 with the exp we just calculated
+        inv_scale_pow2 = tl.exp2(exponent)
+        # If the value is NaN or infinity, default it to 1.0,
+        # otherwise keep its original value.
+        is_nan = inv_scale_pow2 != inv_scale_pow2
+        is_inf = (inv_scale_pow2 == float("inf")) | (inv_scale_pow2 == float("-inf"))
+        inv_scale_pow2 = tl.where(is_nan | is_inf, 1.0, inv_scale_pow2)
+        # finally uninverse
+        y_s = 1.0 / inv_scale_pow2
+
+        y_q = tl.clamp(y / y_s, fp8_min, fp8_max).to(y_q_ptr.dtype.element_ty)
+
+        tl.store(y_q_ptr + cols, y_q, mask=mask)
+        tl.store(y_s_ptr, y_s)
+
+    _per_token_group_quant_fp8_kernel = _per_token_group_quant_fp8_impl
+    _per_token_group_quant_fp8_colmajor_kernel = _per_token_group_quant_fp8_colmajor_impl
+    _triton_kernels_initialized = True
 
 
 def per_token_group_quant_fp8(
