@@ -39,6 +39,8 @@ from collections import defaultdict
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable, Dict, Optional, Sequence, Union
 
+from nemo_rl.trainers.base import TrainingResult
+
 if TYPE_CHECKING:
     from nemo_rl.trainers.callbacks import Callback
 
@@ -429,7 +431,7 @@ class GRPOTrainer:
         max_steps: Optional[int] = None,
         max_epochs: Optional[int] = None,
         callbacks: Optional[Sequence["Callback"]] = None,
-    ) -> Dict[str, Any]:
+    ) -> TrainingResult:
         """Train the model using GRPO.
 
         This method initializes all components and runs the GRPO training loop
@@ -598,12 +600,24 @@ class GRPOTrainer:
             master_config,
         )
 
-        # Return final metrics
-        return {
+        # Return TrainingResult with final metrics
+        metrics = {
             "total_steps": grpo_state.get("total_steps", 0),
             "current_epoch": grpo_state.get("current_epoch", 0),
             "val_reward": grpo_state.get("val_reward", None),
         }
+        
+        # Get checkpoint path if checkpointing is enabled
+        best_checkpoint_path = None
+        if self.config.get("checkpointing", {}).get("enabled", False):
+            best_checkpoint_path = self.config.get("checkpointing", {}).get("checkpoint_dir")
+        
+        return TrainingResult(
+            metrics=metrics,
+            best_checkpoint_path=best_checkpoint_path,
+            total_steps=grpo_state.get("total_steps", 0),
+            final_loss=grpo_state.get("loss", None),
+        )
 
     @property
     def effective_batch_size(self) -> int:

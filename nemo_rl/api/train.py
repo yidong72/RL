@@ -172,19 +172,43 @@ def train(
         **kwargs,
     )
 
-    # Setup reward function for GRPO
-    if algorithm == "grpo" and reward_fn is not None:
-        _setup_reward_function(trainer, reward_fn)
-
     # Run training
     logger.info(f"Starting {algorithm.upper()} training with model: {model}")
 
-    training_result = trainer.fit(
-        dataset=dataset,
-        max_steps=max_steps,
-        max_epochs=max_epochs,
-        callbacks=callbacks,
-    )
+    # Handle algorithm-specific fit() signatures
+    if algorithm == "grpo":
+        # GRPOTrainer has a different fit() signature that takes dataset name and reward_fn
+        from nemo_rl.algorithms.grpo import GRPOTrainer
+        if isinstance(trainer, GRPOTrainer):
+            # For GRPOTrainer, dataset should be a string (dataset name)
+            # If dataset is not a string, try to extract the name or use "DeepScaler" default
+            dataset_name = dataset if isinstance(dataset, str) else "DeepScaler"
+            
+            training_result = trainer.fit(
+                dataset=dataset_name,
+                reward_fn=reward_fn,
+                max_steps=max_steps,
+                max_epochs=max_epochs,
+                callbacks=callbacks,
+            )
+        else:
+            # Fallback for any other GRPO-like trainer
+            if reward_fn is not None:
+                _setup_reward_function(trainer, reward_fn)
+            training_result = trainer.fit(
+                dataset=dataset,
+                max_steps=max_steps,
+                max_epochs=max_epochs,
+                callbacks=callbacks,
+            )
+    else:
+        # Non-GRPO algorithms (SFT, DPO) use standard BaseTrainer.fit()
+        training_result = trainer.fit(
+            dataset=dataset,
+            max_steps=max_steps,
+            max_epochs=max_epochs,
+            callbacks=callbacks,
+        )
 
     # Build result
     return TrainResult(

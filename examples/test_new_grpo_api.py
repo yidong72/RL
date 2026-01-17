@@ -82,9 +82,11 @@ def main():
     print("\n" + "=" * 60)
     print(" Training Complete! ")
     print("=" * 60)
-    print(f"Total steps: {result.get('total_steps', 'N/A')}")
-    print(f"Final epoch: {result.get('current_epoch', 'N/A')}")
-    print(f"Val reward: {result.get('val_reward', 'N/A')}")
+    # TrainingResult is a dataclass with metrics dict, total_steps, etc.
+    print(f"Total steps: {result.total_steps}")
+    print(f"Metrics: {result.metrics}")
+    if result.best_checkpoint_path:
+        print(f"Checkpoint: {result.best_checkpoint_path}")
     print("=" * 60)
 
     return 0
