@@ -207,6 +207,8 @@ class GRPOTrainer:
                     "context_parallel_size": 1,
                     "sequence_parallel": False,
                     "compile": False,
+                    "cpu_offload": False,
+                    "activation_checkpointing": False,
                 },
                 "megatron_cfg": {
                     "enabled": False,
