@@ -264,6 +264,7 @@ class GRPOTrainer:
                         },
                     },
                     "vllm_cfg": {
+                        "tensor_parallel_size": tensor_parallel_size,
                         "max_model_len": max_sequence_length,
                         "gpu_memory_utilization": 0.7,
                         "precision": "auto",
