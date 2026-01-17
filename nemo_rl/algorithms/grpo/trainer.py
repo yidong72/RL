@@ -256,6 +256,7 @@ class GRPOTrainer:
                     "stop_strings": None,
                     "temperature": 1.0,
                     "top_p": 1.0,
+                    "top_k": None,
                     "colocated": {
                         "enabled": True,
                         "resources": {
@@ -265,15 +266,19 @@ class GRPOTrainer:
                     },
                     "vllm_cfg": {
                         "tensor_parallel_size": tensor_parallel_size,
+                        "pipeline_parallel_size": 1,
+                        "expert_parallel_size": 1,
                         "max_model_len": max_sequence_length,
-                        "gpu_memory_utilization": 0.7,
+                        "gpu_memory_utilization": 0.6,
                         "precision": "auto",
                         "kv_cache_dtype": "auto",
-                        "enable_chunked_prefill": True,
-                        "max_num_batched_tokens": None,
-                        "enable_cuda_graph": False,
-                        "hf_overrides": {},
+                        "skip_tokenizer_init": True,
+                        "async_engine": False,
+                        "enforce_eager": False,
+                        "enable_vllm_metrics_logger": False,
+                        "vllm_metrics_logger_interval": 0.5,
                     },
+                    "vllm_kwargs": {},
                 },
             },
             "loss_fn": {
