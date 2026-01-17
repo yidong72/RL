@@ -204,6 +204,7 @@ class GRPOTrainer:
                     "_v2": False,
                     "enabled": True,
                     "tensor_parallel_size": tensor_parallel_size,
+                    "context_parallel_size": 1,
                     "sequence_parallel": False,
                     "compile": False,
                 },
