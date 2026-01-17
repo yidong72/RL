@@ -741,13 +741,19 @@ class BaseTrainer(ABC):
         from nemo_rl.infra.logging import LoggerFacade, configure_logging
 
         logger_config = self._get_logger_config()
-        if logger_config is not None:
+        
+        # Handle dict config
+        if isinstance(logger_config, dict):
+            log_level = logger_config.get("log_level", "INFO")
+            configure_logging(level=log_level)
+            # Create a simple config object for LoggerFacade
+            self._logger = LoggerFacade(name=self.__class__.__name__, config=None)
+        elif logger_config is not None:
             configure_logging(level=logger_config.log_level)
-
-        self._logger = LoggerFacade(
-            name=self.__class__.__name__,
-            config=logger_config,
-        )
+            self._logger = LoggerFacade(name=self.__class__.__name__, config=logger_config)
+        else:
+            configure_logging(level="INFO")
+            self._logger = LoggerFacade(name=self.__class__.__name__, config=None)
 
         if self._logger:
             self._logger.info(f"Initialized {self.__class__.__name__}")
@@ -757,30 +763,55 @@ class BaseTrainer(ABC):
         from nemo_rl.infra.checkpointing import CheckpointManager
 
         ckpt_config = self._get_checkpointing_config()
-        if ckpt_config is not None and ckpt_config.enabled:
-            self._checkpoint_manager = CheckpointManager(
-                checkpoint_dir=ckpt_config.checkpoint_dir,
-                save_period=ckpt_config.save_period,
-                keep_top_k=ckpt_config.keep_top_k,
-            )
+        
+        if ckpt_config is None:
+            return
+            
+        # Handle dict config
+        if isinstance(ckpt_config, dict):
+            enabled = ckpt_config.get("enabled", True)
+            if not enabled:
+                return
+            checkpoint_dir = ckpt_config.get("checkpoint_dir", "./checkpoints")
+            save_period = ckpt_config.get("save_period", 100)
+            keep_top_k = ckpt_config.get("keep_top_k", 5)
+        else:
+            if not getattr(ckpt_config, "enabled", True):
+                return
+            checkpoint_dir = getattr(ckpt_config, "checkpoint_dir", "./checkpoints")
+            save_period = getattr(ckpt_config, "save_period", 100)
+            keep_top_k = getattr(ckpt_config, "keep_top_k", 5)
+        
+        self._checkpoint_manager = CheckpointManager(
+            checkpoint_dir=checkpoint_dir,
+            keep_top_k=keep_top_k,
+        )
 
-            # Load existing state if resuming
-            last_checkpoint = self._checkpoint_manager.get_latest_checkpoint()
-            if last_checkpoint is not None:
-                self._load_checkpoint(last_checkpoint)
+        # Load existing state if resuming
+        last_checkpoint = self._checkpoint_manager.get_latest_checkpoint_path()
+        if last_checkpoint is not None:
+            self._load_checkpoint(last_checkpoint)
 
     def _setup_cluster(self) -> None:
         """Initialize cluster resources."""
         from nemo_rl.infra.resources import ResourceManager
 
         cluster_config = self._get_cluster_config()
-        if cluster_config is not None:
+        
+        if cluster_config is None:
+            self._resource_manager = ResourceManager.auto_detect()
+        elif isinstance(cluster_config, dict):
+            num_nodes = cluster_config.get("num_nodes", 1)
+            gpus_per_node = cluster_config.get("gpus_per_node", 1)
             self._resource_manager = ResourceManager(
-                num_nodes=cluster_config.num_nodes,
-                gpus_per_node=cluster_config.gpus_per_node,
+                num_nodes=num_nodes,
+                gpus_per_node=gpus_per_node,
             )
         else:
-            self._resource_manager = ResourceManager.auto_detect()
+            self._resource_manager = ResourceManager(
+                num_nodes=getattr(cluster_config, "num_nodes", 1),
+                gpus_per_node=getattr(cluster_config, "gpus_per_node", 1),
+            )
 
     # =========================================================================
     # Internal Training Loop
@@ -985,43 +1016,65 @@ class BaseTrainer(ABC):
     # Config Accessors (Override if config structure differs)
     # =========================================================================
 
+    def _get_config_value(self, key: str, default: Any = None) -> Any:
+        """Get a value from config, handling both dict and object configs.
+        
+        Args:
+            key: Config key to retrieve.
+            default: Default value if key not found.
+            
+        Returns:
+            Config value or default.
+        """
+        if isinstance(self.config, dict):
+            return self.config.get(key, default)
+        return getattr(self.config, key, default)
+
     def _get_seed(self) -> int:
         """Get random seed from config."""
-        return getattr(self.config, "seed", 42)
+        return self._get_config_value("seed", 42)
 
     def _get_max_epochs(self) -> int:
         """Get max epochs from config."""
-        return getattr(self.config, "max_num_epochs", 1)
+        return self._get_config_value("max_num_epochs", 1)
 
     def _get_max_steps(self) -> int:
         """Get max steps from config."""
-        return getattr(self.config, "max_num_steps", 10000)
+        return self._get_config_value("max_num_steps", 10000)
 
     def _get_log_interval(self) -> int:
         """Get logging interval from config."""
         logger_config = self._get_logger_config()
-        return logger_config.log_interval if logger_config else 10
+        if logger_config is None:
+            return 10
+        if isinstance(logger_config, dict):
+            return logger_config.get("log_interval", 10)
+        return getattr(logger_config, "log_interval", 10)
 
     def _get_val_period(self) -> int:
         """Get validation period from config."""
-        return getattr(self.config, "val_period", 100)
+        return self._get_config_value("val_period", 100)
 
     def _get_checkpoint_period(self) -> int:
         """Get checkpoint save period from config."""
         ckpt_config = self._get_checkpointing_config()
-        return ckpt_config.save_period if ckpt_config else 100
+        if ckpt_config is None:
+            return 100
+        if isinstance(ckpt_config, dict):
+            return ckpt_config.get("save_period", 100)
+        return getattr(ckpt_config, "save_period", 100)
 
-    def _get_logger_config(self) -> "LoggerConfig | None":
+    def _get_logger_config(self) -> "LoggerConfig | dict | None":
         """Get logger config from main config."""
-        return getattr(self.config, "logger", None)
+        return self._get_config_value("logger", None)
 
-    def _get_cluster_config(self) -> "ClusterConfig | None":
+    def _get_cluster_config(self) -> "ClusterConfig | dict | None":
         """Get cluster config from main config."""
-        return getattr(self.config, "cluster", None)
+        return self._get_config_value("cluster", None)
 
-    def _get_checkpointing_config(self) -> "CheckpointingConfig | None":
+    def _get_checkpointing_config(self) -> "CheckpointingConfig | dict | None":
         """Get checkpointing config from main config."""
-        return getattr(self.config, "checkpointing", None)
+        return self._get_config_value("checkpointing", None)
 
     def _create_datamodule(
         self, train_data: Any, val_data: Any = None
