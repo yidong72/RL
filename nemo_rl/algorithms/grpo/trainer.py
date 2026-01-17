@@ -13,321 +13,574 @@
 # limitations under the License.
 """GRPO Trainer implementation.
 
-This module provides the GRPOTrainer class that extends BaseTrainer
-for Group Relative Policy Optimization training.
+This module provides the GRPOTrainer class that wraps the legacy grpo_train
+function with a modern, user-friendly API.
 
 Example:
     >>> from nemo_rl.algorithms.grpo import GRPOTrainer
     >>> 
+    >>> # Simple usage with from_pretrained
+    >>> trainer = GRPOTrainer.from_pretrained(
+    ...     "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B",
+    ...     num_prompts_per_step=32,
+    ... )
+    >>> trainer.fit(dataset="DeepScaler")
+    >>> 
+    >>> # Or with full config
     >>> trainer = GRPOTrainer(config)
-    >>> trainer.fit(dataset="nvidia/OpenMathInstruct-2")
+    >>> trainer.fit(dataset="DeepScaler")
 """
 
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Any, Dict, Optional
-
-from nemo_rl.trainers.base import BaseTrainer, TrainingResult
+import os
+from collections import defaultdict
+from pathlib import Path
+from typing import TYPE_CHECKING, Any, Callable, Dict, Optional, Sequence, Union
 
 if TYPE_CHECKING:
-    from nemo_rl.algorithms.grpo.config import GRPOConfig, MasterConfig
-    from nemo_rl.algorithms.rollout import RolloutEngine
-    from nemo_rl.distributed.batched_data_dict import BatchedDataDict
+    from nemo_rl.trainers.callbacks import Callback
 
 logger = logging.getLogger(__name__)
 
 
-class GRPOTrainer(BaseTrainer):
+class GRPOTrainer:
     """Trainer for Group Relative Policy Optimization (GRPO).
 
-    GRPOTrainer extends BaseTrainer to implement the GRPO algorithm,
-    which trains language models using relative preferences within
-    groups of generations from the same prompt.
+    GRPOTrainer provides a user-friendly interface for GRPO training that
+    wraps the proven legacy implementation. It supports both simple
+    `from_pretrained()` initialization and full configuration.
 
     Key features:
     - Multiple generations per prompt for relative comparison
     - Advantage normalization within prompt groups
     - Leave-one-out baseline computation
-    - Support for both sync and async training modes
+    - Support for built-in datasets (DeepScaler, OpenMathInstruct-2)
+    - Integration with reward environments (math, custom)
 
     Attributes:
-        rollout_engine: Engine for generation and reward collection.
+        config: Full training configuration (MasterConfig).
+        num_prompts_per_step: Number of prompts per training step.
         num_generations_per_prompt: Number of responses per prompt.
         normalize_rewards: Whether to normalize advantages.
         use_leave_one_out_baseline: Use leave-one-out for baseline.
 
     Example:
-        >>> # From pretrained model
+        >>> # From pretrained model (simple API)
         >>> trainer = GRPOTrainer.from_pretrained(
-        ...     "Qwen/Qwen2.5-1.5B",
+        ...     "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B",
         ...     num_prompts_per_step=32,
         ...     num_generations_per_prompt=16,
         ... )
-        >>> trainer.fit(
-        ...     dataset="nvidia/OpenMathInstruct-2",
-        ...     reward_fn=my_reward_function,
-        ... )
+        >>> trainer.fit(dataset="DeepScaler")
         >>> 
         >>> # Or from config directly
+        >>> config = load_config("examples/configs/grpo_math_1B.yaml")
         >>> trainer = GRPOTrainer(config)
-        >>> trainer.fit(
-        ...     dataset="nvidia/OpenMathInstruct-2",
-        ...     callbacks=[CheckpointCallback(every_n_steps=100)],
-        ... )
+        >>> trainer.fit(dataset="DeepScaler")
     """
 
     @classmethod
-    def _build_config_from_pretrained(
+    def from_pretrained(
         cls,
         model_name_or_path: str,
+        num_prompts_per_step: int = 32,
+        num_generations_per_prompt: int = 16,
+        learning_rate: float = 5e-6,
+        max_steps: int = 1000,
+        max_epochs: int = 1,
+        max_sequence_length: int = 2048,
+        max_new_tokens: int = 1024,
+        tensor_parallel_size: int = 1,
+        gpus_per_node: int = 8,
+        num_nodes: int = 1,
+        normalize_rewards: bool = True,
+        use_leave_one_out_baseline: bool = True,
+        checkpoint_dir: Optional[str] = None,
+        log_dir: Optional[str] = None,
+        wandb_enabled: bool = False,
+        tensorboard_enabled: bool = True,
+        seed: int = 42,
         **kwargs: Any,
-    ) -> dict[str, Any]:
-        """Build GRPO-specific configuration from a pretrained model.
+    ) -> "GRPOTrainer":
+        """Create a GRPOTrainer from a pretrained model.
+
+        This provides a simplified interface for creating a trainer with
+        sensible defaults. For full control, create a config dict and
+        pass it directly to GRPOTrainer().
 
         Args:
-            model_name_or_path: Model identifier or path.
-            **kwargs: Configuration overrides. GRPO-specific options:
-                - num_prompts_per_step: Prompts per training step (default: 32)
-                - num_generations_per_prompt: Generations per prompt (default: 16)
-                - normalize_rewards: Whether to normalize rewards (default: True)
-                - use_leave_one_out_baseline: LOO baseline (default: True)
-                - max_steps: Maximum training steps (default: 1000)
-                - max_epochs: Maximum epochs (default: 1)
+            model_name_or_path: HuggingFace model name or local path.
+            num_prompts_per_step: Prompts per training step (batch size).
+            num_generations_per_prompt: Responses to generate per prompt.
+            learning_rate: Optimizer learning rate.
+            max_steps: Maximum training steps.
+            max_epochs: Maximum training epochs.
+            max_sequence_length: Maximum total sequence length.
+            max_new_tokens: Maximum new tokens to generate.
+            tensor_parallel_size: Tensor parallel degree.
+            gpus_per_node: GPUs per node.
+            num_nodes: Number of nodes.
+            normalize_rewards: Whether to normalize rewards.
+            use_leave_one_out_baseline: Use leave-one-out baseline.
+            checkpoint_dir: Directory for checkpoints.
+            log_dir: Directory for logs.
+            wandb_enabled: Enable WandB logging.
+            tensorboard_enabled: Enable TensorBoard logging.
+            seed: Random seed.
+            **kwargs: Additional config overrides.
 
         Returns:
-            GRPO configuration dictionary.
+            Configured GRPOTrainer instance.
         """
-        # Get base config
-        config = super()._build_config_from_pretrained(model_name_or_path, **kwargs)
+        # Build model short name for directories
+        model_short = model_name_or_path.split("/")[-1] if "/" in model_name_or_path else model_name_or_path
+        
+        if checkpoint_dir is None:
+            checkpoint_dir = f"results/{model_short}"
+        if log_dir is None:
+            log_dir = f"logs/{model_short}"
 
-        # Extract GRPO-specific parameters
-        num_prompts_per_step = kwargs.pop("num_prompts_per_step", 32)
-        num_generations_per_prompt = kwargs.pop("num_generations_per_prompt", 16)
-        max_steps = kwargs.pop("max_steps", 1000)
-        max_epochs = kwargs.pop("max_epochs", 1)
+        # Build a minimal config that matches MasterConfig structure
+        config = cls._build_config(
+            model_name=model_name_or_path,
+            num_prompts_per_step=num_prompts_per_step,
+            num_generations_per_prompt=num_generations_per_prompt,
+            learning_rate=learning_rate,
+            max_steps=max_steps,
+            max_epochs=max_epochs,
+            max_sequence_length=max_sequence_length,
+            max_new_tokens=max_new_tokens,
+            tensor_parallel_size=tensor_parallel_size,
+            gpus_per_node=gpus_per_node,
+            num_nodes=num_nodes,
+            normalize_rewards=normalize_rewards,
+            use_leave_one_out_baseline=use_leave_one_out_baseline,
+            checkpoint_dir=checkpoint_dir,
+            log_dir=log_dir,
+            wandb_enabled=wandb_enabled,
+            tensorboard_enabled=tensorboard_enabled,
+            seed=seed,
+            **kwargs,
+        )
 
-        # Add GRPO config
-        config["grpo"] = {
-            "num_prompts_per_step": num_prompts_per_step,
-            "num_generations_per_prompt": num_generations_per_prompt,
-            "max_num_steps": max_steps,
-            "max_num_epochs": max_epochs,
-            "normalize_rewards": kwargs.pop("normalize_rewards", True),
-            "use_leave_one_out_baseline": kwargs.pop("use_leave_one_out_baseline", True),
-            "use_dynamic_sampling": kwargs.pop("use_dynamic_sampling", False),
+        return cls(config)
+
+    @staticmethod
+    def _build_config(
+        model_name: str,
+        num_prompts_per_step: int,
+        num_generations_per_prompt: int,
+        learning_rate: float,
+        max_steps: int,
+        max_epochs: int,
+        max_sequence_length: int,
+        max_new_tokens: int,
+        tensor_parallel_size: int,
+        gpus_per_node: int,
+        num_nodes: int,
+        normalize_rewards: bool,
+        use_leave_one_out_baseline: bool,
+        checkpoint_dir: str,
+        log_dir: str,
+        wandb_enabled: bool,
+        tensorboard_enabled: bool,
+        seed: int,
+        **kwargs: Any,
+    ) -> Dict[str, Any]:
+        """Build a MasterConfig-compatible dict from simple parameters."""
+        train_global_batch_size = num_prompts_per_step * num_generations_per_prompt
+
+        config: Dict[str, Any] = {
+            "policy": {
+                "model_name": model_name,
+                "tokenizer": {
+                    "name": model_name,
+                    "chat_template_kwargs": None,
+                },
+                "precision": "bfloat16",
+                "dtensor_cfg": {
+                    "_v2": False,
+                    "enabled": True,
+                    "tensor_parallel_size": tensor_parallel_size,
+                    "sequence_parallel": False,
+                    "compile": False,
+                },
+                "megatron_cfg": {
+                    "enabled": False,
+                },
+                "train_global_batch_size": train_global_batch_size,
+                "train_micro_batch_size": min(2, train_global_batch_size),
+                "max_total_sequence_length": max_sequence_length,
+                "optimizer": {
+                    "name": "torch.optim.AdamW",
+                    "kwargs": {
+                        "lr": learning_rate,
+                        "betas": [0.9, 0.999],
+                        "eps": 1e-8,
+                        "weight_decay": 0.01,
+                        "foreach": False,
+                        "fused": False,
+                    },
+                },
+                "scheduler": [
+                    {
+                        "name": "torch.optim.lr_scheduler.LinearLR",
+                        "kwargs": {
+                            "start_factor": 0.1,
+                            "end_factor": 1.0,
+                            "total_iters": 50,
+                        },
+                    },
+                    {
+                        "name": "torch.optim.lr_scheduler.ConstantLR",
+                        "kwargs": {
+                            "factor": 1.0,
+                            "total_iters": 10000000000,
+                        },
+                    },
+                    {"milestones": [50]},
+                ],
+                "sequence_packing": {
+                    "enabled": True,
+                    "algorithm": "modified_first_fit_decreasing",
+                    "sequence_length_round": 64,
+                    "train_mb_tokens": 4096,
+                    "logprob_mb_tokens": 8192,
+                },
+                "generation": {
+                    "backend": "vllm",
+                    "max_new_tokens": max_new_tokens,
+                    "stop_token_ids": None,  # Will be set from tokenizer
+                    "stop_strings": None,
+                    "temperature": 1.0,
+                    "top_p": 1.0,
+                    "colocated": {
+                        "enabled": True,
+                        "resources": {
+                            "gpus_per_node": None,
+                            "num_nodes": None,
+                        },
+                    },
+                    "vllm_cfg": {
+                        "max_model_len": max_sequence_length,
+                        "gpu_memory_utilization": 0.7,
+                        "precision": "auto",
+                        "kv_cache_dtype": "auto",
+                        "enable_chunked_prefill": True,
+                        "max_num_batched_tokens": None,
+                        "enable_cuda_graph": False,
+                        "hf_overrides": {},
+                    },
+                },
+            },
+            "loss_fn": {
+                "use_importance_sampling_correction": True,
+                "ratio_eps": 0.2,
+                "entropy_coeff": 0.0,
+                "kl_coeff": 0.001,
+                "force_on_policy_ratio": False,
+            },
+            "env": {
+                "math": {
+                    "answer_extraction_model": "gpt-4o",
+                    "use_async_answer_extraction": False,
+                    "use_majority_vote_baseline": False,
+                    "num_attempts_for_baseline": 64,
+                    "check_policy_answer_in_baseline": True,
+                    "timeout": 5.0,
+                },
+            },
+            "data": {
+                "dataset_name": "DeepScaler",  # Default, can be overridden
+                "processor": "math_hf_data_processor",
+                "env_name": "math",
+                "max_input_seq_length": max_sequence_length // 2,
+                "prompt_file": None,
+                "system_prompt_file": None,
+                "shuffle": True,
+                "num_workers": 4,
+            },
+            "grpo": {
+                "num_prompts_per_step": num_prompts_per_step,
+                "num_generations_per_prompt": num_generations_per_prompt,
+                "max_num_epochs": max_epochs,
+                "max_num_steps": max_steps,
+                "max_rollout_turns": 1,
+                "normalize_rewards": normalize_rewards,
+                "use_leave_one_out_baseline": use_leave_one_out_baseline,
+                "val_period": 100,
+                "val_batch_size": 30,
+                "val_at_start": False,
+                "max_val_samples": 480,
+                "seed": seed,
+                "overlong_filtering": True,
+                "use_dynamic_sampling": False,
+                "dynamic_sampling_max_gen_batches": 1,
+                "batch_multiplier": 1.0,
+                "reward_shaping": {"enabled": False},
+                "reward_scaling": {"enabled": False},
+            },
+            "logger": {
+                "log_dir": log_dir,
+                "wandb_enabled": wandb_enabled,
+                "tensorboard_enabled": tensorboard_enabled,
+                "swanlab_enabled": False,
+                "mlflow_enabled": False,
+                "monitor_gpus": True,
+                "num_val_samples_to_print": 5,
+                "wandb": {
+                    "project": "",
+                    "name": "",
+                },
+                "tensorboard": {},  # TensorBoard config (empty dict uses defaults)
+                "swanlab": {},  # SwanLab config
+                "mlflow": {},  # MLflow config
+                "gpu_monitoring": {
+                    "collection_interval": 10.0,
+                    "flush_interval": 10.0,
+                },
+            },
+            "cluster": {
+                "gpus_per_node": gpus_per_node,
+                "num_nodes": num_nodes,
+            },
+            "checkpointing": {
+                "enabled": kwargs.get("checkpointing_enabled", True),
+                "checkpoint_dir": checkpoint_dir,
+                "save_period": kwargs.get("save_period", 100),
+                "checkpoint_must_save_by": kwargs.get("checkpoint_must_save_by", None),
+                "metric_name": None,  # Metric to use for best checkpoint selection
+                "metric_mode": "max",  # 'max' or 'min'
+            },
         }
+
+        # Apply any additional overrides from kwargs
+        for key, value in kwargs.items():
+            if key.startswith("grpo_"):
+                config_key = key[5:]  # Remove "grpo_" prefix
+                if config_key in config["grpo"]:
+                    config["grpo"][config_key] = value
+            elif key.startswith("policy_"):
+                config_key = key[7:]  # Remove "policy_" prefix
+                if config_key in config["policy"]:
+                    config["policy"][config_key] = value
 
         return config
 
-    def __init__(self, config: "MasterConfig"):
+    def __init__(self, config: Dict[str, Any]):
         """Initialize the GRPO trainer.
 
         Args:
-            config: Full GRPO configuration (MasterConfig).
+            config: Full GRPO configuration (MasterConfig-compatible dict).
         """
-        super().__init__(config)
-
-        # Extract GRPO-specific config
-        self._grpo_config: "GRPOConfig" = config.get("grpo", {})
-
-        # GRPO parameters
-        self.num_prompts_per_step = self._grpo_config.get("num_prompts_per_step", 32)
-        self.num_generations_per_prompt = self._grpo_config.get(
-            "num_generations_per_prompt", 16
-        )
-        self.normalize_rewards = self._grpo_config.get("normalize_rewards", True)
-        self.use_leave_one_out_baseline = self._grpo_config.get(
-            "use_leave_one_out_baseline", True
-        )
-        self.use_dynamic_sampling = self._grpo_config.get("use_dynamic_sampling", False)
-
-        # Components initialized in setup
-        self._rollout_engine: Optional["RolloutEngine"] = None
-        self._loss_fn = None
-        self._policy = None
-        self._generation = None
-        self._reward_wrapper = None  # Set by nemo_rl.train() for functional reward
-
-    def _train_step(self, batch: Any) -> dict[str, Any]:
-        """Perform a single GRPO training step.
-
-        The GRPO training step:
-        1. Generate responses for prompts
-        2. Collect rewards from environment
-        3. Compute advantages within prompt groups
-        4. Compute policy gradient loss
-        5. Update model weights
-
-        Args:
-            batch: Batch of prompts from dataloader.
-
-        Returns:
-            Dictionary with loss, reward, and other metrics.
-        """
-        import torch
+        self.config = config
         
-        # Convert batch to dict if it's a list
-        if isinstance(batch, (list, tuple)):
-            batch = {"prompts": batch}
-        elif not isinstance(batch, dict):
-            # Try to convert from DataLoader batch
-            batch = dict(batch) if hasattr(batch, "keys") else {"data": batch}
+        # Extract commonly accessed values
+        grpo_cfg = config.get("grpo", {})
+        self.num_prompts_per_step = grpo_cfg.get("num_prompts_per_step", 32)
+        self.num_generations_per_prompt = grpo_cfg.get("num_generations_per_prompt", 16)
+        self.normalize_rewards = grpo_cfg.get("normalize_rewards", True)
+        self.use_leave_one_out_baseline = grpo_cfg.get("use_leave_one_out_baseline", True)
+        
+        # State tracking
+        self._is_setup = False
+        self._policy = None
+        self._policy_generation = None
+        self._tokenizer = None
+        self._logger = None
 
-        # Generate responses and collect rewards
-        if self._rollout_engine is not None:
-            rollout_result = self._rollout_engine.rollout(batch)
-            batch = rollout_result.responses
-            batch["rewards"] = rollout_result.rewards
-        elif self._reward_wrapper is not None:
-            # Use reward wrapper if available (from nemo_rl.train())
-            # For now, skip rollout in skeleton mode
-            pass
+    def fit(
+        self,
+        dataset: Optional[str] = None,
+        reward_fn: Optional[Callable[[str, str], float]] = None,
+        max_steps: Optional[int] = None,
+        max_epochs: Optional[int] = None,
+        callbacks: Optional[Sequence["Callback"]] = None,
+    ) -> Dict[str, Any]:
+        """Train the model using GRPO.
 
-        # If no rewards, create dummy ones for skeleton training
-        if "rewards" not in batch:
-            batch_size = len(batch.get("prompts", batch.get("prompt", [None])))
-            if batch_size == 0:
-                batch_size = 1
-            batch["rewards"] = torch.zeros(batch_size)
-
-        # Prepare batch (compute advantages) - only if we have proper batch structure
-        if "rewards" in batch and self.num_generations_per_prompt > 0:
-            try:
-                from nemo_rl.algorithms.grpo.data import prepare_batch_for_training
-                batch = prepare_batch_for_training(
-                    batch,
-                    num_generations_per_prompt=self.num_generations_per_prompt,
-                    use_leave_one_out_baseline=self.use_leave_one_out_baseline,
-                    normalize_rewards=self.normalize_rewards,
-                )
-            except Exception:
-                # If prepare_batch_for_training fails, continue with raw batch
-                pass
-
-        # Compute loss
-        loss = 0.0
-        loss_metrics = {}
-        if self._loss_fn is not None:
-            try:
-                loss, loss_metrics = self._loss_fn(batch)
-            except Exception:
-                pass
-        elif "loss" in batch:
-            loss = batch["loss"]
-
-        # Get rewards for metrics
-        rewards = batch.get("rewards", torch.zeros(1))
-        if isinstance(rewards, torch.Tensor):
-            reward_mean = rewards.mean().item()
-            reward_std = rewards.std().item() if rewards.numel() > 1 else 0.0
-        else:
-            reward_mean = 0.0
-            reward_std = 0.0
-
-        # Collect metrics
-        metrics = {
-            "loss": loss.item() if hasattr(loss, "item") else float(loss),
-            "reward_mean": reward_mean,
-            "reward_std": reward_std,
-            **loss_metrics,
-        }
-
-        return metrics
-
-    def _compute_loss(self, batch: Any, outputs: Any) -> Any:
-        """Compute the GRPO policy gradient loss.
+        This method initializes all components and runs the GRPO training loop
+        using the proven legacy implementation.
 
         Args:
-            batch: Input batch with advantages.
-            outputs: Model outputs (logprobs).
+            dataset: Dataset name. Supported built-in datasets:
+                - "DeepScaler": DeepScaleR math dataset
+                - "OpenMathInstruct-2": OpenMathInstruct-2 dataset
+                If not provided, uses config["data"]["dataset_name"].
+            reward_fn: Custom reward function (not yet supported - use
+                built-in math environment for now).
+            max_steps: Override max training steps.
+            max_epochs: Override max epochs.
+            callbacks: Training callbacks (not yet supported in legacy backend).
 
         Returns:
-            Loss tensor.
+            Dictionary with training metrics.
+
+        Raises:
+            ValueError: If dataset is not supported.
         """
-        from nemo_rl.algorithms.grpo.loss import compute_grpo_loss
+        import os
+        import ray
 
-        if self._loss_fn is not None:
-            loss, _ = compute_grpo_loss(batch, self._loss_fn)
-            return loss
+        from nemo_rl.algorithms.grpo_legacy import grpo_train, setup
+        from nemo_rl.algorithms.utils import get_tokenizer
+        from nemo_rl.data.datasets import AllTaskProcessedDataset
+        from nemo_rl.data.datasets.response_datasets import load_response_dataset
+        from nemo_rl.data.interfaces import TaskDataSpec
+        from nemo_rl.data.processors import math_hf_data_processor
+        from nemo_rl.distributed.ray_actor_environment_registry import get_actor_python_env
+        from nemo_rl.distributed.virtual_cluster import init_ray
+        from nemo_rl.environments.math_environment import MathEnvironment
+        from nemo_rl.models.generation import configure_generation_config
+        from nemo_rl.utils.logger import get_next_experiment_dir
 
-        return outputs.get("loss", 0.0)
+        # Update config with overrides
+        if dataset is not None:
+            self.config["data"]["dataset_name"] = dataset
+        if max_steps is not None:
+            self.config["grpo"]["max_num_steps"] = max_steps
+        if max_epochs is not None:
+            self.config["grpo"]["max_num_epochs"] = max_epochs
 
-    def _validate_step(self, batch: Any) -> dict[str, Any]:
-        """Perform a validation step.
-
-        Generates responses and computes rewards without training.
-
-        Args:
-            batch: Batch of validation prompts.
-
-        Returns:
-            Dictionary with validation metrics.
-        """
-        if self._rollout_engine is not None:
-            rollout_result = self._rollout_engine.rollout(
-                batch, collect_rewards=True
+        # Warn about unsupported features
+        if reward_fn is not None:
+            logger.warning(
+                "Custom reward_fn not yet supported in GRPOTrainer. "
+                "Using built-in math environment. For custom rewards, use the legacy API."
             )
-            rewards = rollout_result.rewards
+        if callbacks is not None:
+            logger.warning(
+                "Callbacks not yet supported in GRPOTrainer legacy backend. "
+                "For callbacks, use the legacy API directly."
+            )
 
-            return {
-                "val_reward_mean": rewards.mean().item() if rewards is not None else 0.0,
-                "val_reward_std": rewards.std().item() if rewards is not None else 0.0,
+        # Set up experiment directory
+        log_dir = self.config["logger"]["log_dir"]
+        self.config["logger"]["log_dir"] = get_next_experiment_dir(log_dir)
+        logger.info(f"Using log directory: {self.config['logger']['log_dir']}")
+
+        if self.config["checkpointing"]["enabled"]:
+            logger.info(f"Using checkpoint directory: {self.config['checkpointing']['checkpoint_dir']}")
+
+        # Initialize Ray
+        init_ray()
+
+        # Set up tokenizer
+        tokenizer = get_tokenizer(self.config["policy"]["tokenizer"])
+        self._tokenizer = tokenizer
+
+        # Configure generation
+        if self.config["policy"]["generation"] is not None:
+            self.config["policy"]["generation"] = configure_generation_config(
+                self.config["policy"]["generation"], tokenizer
+            )
+
+        # Set up data
+        print("\n▶ Setting up data...")
+        data_config = self.config["data"]
+        env_configs = self.config["env"]
+        seed = self.config["grpo"]["seed"]
+
+        # Load dataset
+        data = load_response_dataset(data_config, seed)
+        task_name = data.task_name if hasattr(data, "task_name") else data.task_spec.task_name
+
+        # Create task spec
+        math_task_spec = TaskDataSpec(
+            task_name="math",
+            prompt_file=data_config.get("prompt_file"),
+            system_prompt_file=data_config.get("system_prompt_file"),
+        )
+
+        # Set up data processor
+        task_data_processors = defaultdict(lambda: (math_task_spec, math_hf_data_processor))
+        task_data_processors[task_name] = (math_task_spec, math_hf_data_processor)
+
+        # Set up math environment
+        math_env = MathEnvironment.options(
+            runtime_env={
+                "py_executable": get_actor_python_env(
+                    "nemo_rl.environments.math_environment.MathEnvironment"
+                ),
+                "env_vars": dict(os.environ),
             }
+        ).remote(env_configs["math"])
 
-        return {"val_reward_mean": 0.0, "val_reward_std": 0.0}
+        # Create dataset
+        train_dataset = AllTaskProcessedDataset(
+            data.formatted_ds["train"],
+            tokenizer,
+            math_task_spec,
+            task_data_processors,
+            max_seq_length=data_config["max_input_seq_length"],
+        )
 
-    def _setup_model(self) -> None:
-        """Set up the policy model and generation backend."""
-        # Note: Full implementation would initialize Policy, Generation, etc.
-        # This is a skeleton showing the architecture direction
-        logger.info("Setting up GRPO model components")
-
-    def _setup_optimizer(self) -> None:
-        """Set up the optimizer and learning rate scheduler."""
-        # Note: Full implementation would create optimizer from config
-        logger.info("Setting up GRPO optimizer")
-
-    def _on_train_begin(self) -> None:
-        """Called before training starts."""
-        super()._on_train_begin()
-
-        if self._logger:
-            self._logger.info(
-                f"GRPO training starting: "
-                f"{self.num_prompts_per_step} prompts x "
-                f"{self.num_generations_per_prompt} generations"
+        val_dataset = None
+        if data.formatted_ds.get("validation"):
+            val_dataset = AllTaskProcessedDataset(
+                data.formatted_ds["validation"],
+                tokenizer,
+                math_task_spec,
+                task_data_processors,
+                max_seq_length=data_config["max_input_seq_length"],
             )
 
-    def _on_epoch_end(self, epoch: int, metrics: dict[str, Any]) -> None:
-        """Called after each epoch.
+        # Set up task-to-environment mapping
+        task_to_env = defaultdict(lambda: math_env)
+        task_to_env[task_name] = math_env
 
-        Args:
-            epoch: Current epoch number.
-            metrics: Epoch metrics.
-        """
-        super()._on_epoch_end(epoch, metrics)
+        # Call the legacy setup function
+        (
+            policy,
+            policy_generation,
+            cluster,
+            dataloader,
+            val_dataloader,
+            loss_fn,
+            grpo_logger,
+            checkpointer,
+            grpo_state,
+            master_config,
+        ) = setup(self.config, tokenizer, train_dataset, val_dataset)
 
-        if self._logger:
-            self._logger.info(
-                f"Epoch {epoch + 1} complete - "
-                f"Loss: {metrics.get('loss', 0):.4f}, "
-                f"Reward: {metrics.get('reward_mean', 0):.4f}"
-            )
+        self._policy = policy
+        self._policy_generation = policy_generation
+        self._logger = grpo_logger
+        self._is_setup = True
 
-    def _get_max_epochs(self) -> int:
-        """Get max epochs from GRPO config."""
-        return self._grpo_config.get("max_num_epochs", 1)
+        # Run training
+        print("\n🚀 Running synchronous GRPO training")
+        grpo_train(
+            policy,
+            policy_generation,
+            dataloader,
+            val_dataloader,
+            tokenizer,
+            loss_fn,
+            task_to_env,
+            task_to_env,  # val_task_to_env
+            grpo_logger,
+            checkpointer,
+            grpo_state,
+            master_config,
+        )
 
-    def _get_max_steps(self) -> int:
-        """Get max steps from GRPO config."""
-        return self._grpo_config.get("max_num_steps", 10000)
-
-    def _get_val_period(self) -> int:
-        """Get validation period from GRPO config."""
-        return self._grpo_config.get("val_period", 100)
+        # Return final metrics
+        return {
+            "total_steps": grpo_state.get("total_steps", 0),
+            "current_epoch": grpo_state.get("current_epoch", 0),
+            "val_reward": grpo_state.get("val_reward", None),
+        }
 
     @property
     def effective_batch_size(self) -> int:
         """Get the effective batch size (prompts * generations)."""
         return self.num_prompts_per_step * self.num_generations_per_prompt
+
+    def __repr__(self) -> str:
+        return (
+            f"GRPOTrainer(model={self.config['policy']['model_name']!r}, "
+            f"batch={self.num_prompts_per_step}x{self.num_generations_per_prompt})"
+        )
