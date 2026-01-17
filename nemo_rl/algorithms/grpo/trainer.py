@@ -209,13 +209,18 @@ class GRPOTrainer:
                     "compile": False,
                     "cpu_offload": False,
                     "activation_checkpointing": False,
+                    "custom_parallel_plan": None,
                 },
                 "megatron_cfg": {
                     "enabled": False,
                 },
                 "train_global_batch_size": train_global_batch_size,
                 "train_micro_batch_size": min(2, train_global_batch_size),
+                "logprob_batch_size": min(4, train_global_batch_size),
+                "batch_size": train_global_batch_size,  # Alias for consistency
                 "max_total_sequence_length": max_sequence_length,
+                "offload_optimizer_for_logprob": False,
+                "max_grad_norm": 1.0,
                 "optimizer": {
                     "name": "torch.optim.AdamW",
                     "kwargs": {
