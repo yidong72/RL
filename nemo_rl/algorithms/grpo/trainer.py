@@ -290,6 +290,8 @@ class GRPOTrainer:
             },
             "env": {
                 "math": {
+                    "num_workers": 8,
+                    "math_verify_impl": "hf_math_verify",
                     "answer_extraction_model": "gpt-4o",
                     "use_async_answer_extraction": False,
                     "use_majority_vote_baseline": False,
