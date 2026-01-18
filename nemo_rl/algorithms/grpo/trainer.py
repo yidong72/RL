@@ -221,6 +221,7 @@ class GRPOTrainer:
                 "logprob_batch_size": min(4, train_global_batch_size),
                 "batch_size": train_global_batch_size,  # Alias for consistency
                 "max_total_sequence_length": max_sequence_length,
+                "make_sequence_length_divisible_by": tensor_parallel_size,  # For sequence padding
                 "offload_optimizer_for_logprob": False,
                 "max_grad_norm": 1.0,
                 "optimizer": {
