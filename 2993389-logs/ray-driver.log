@@ -1,0 +1,42 @@
+============================================================
+ Testing New GRPOTrainer API 
+============================================================
+Max steps: 10
+GPUs per node: 8
+Num nodes: 1
+Prompts per step: 8
+Generations per prompt: 4
+============================================================
+Using local model: /lustre/fsw/portfolios/nvr/users/yidong/data/models/huggingface_hub/hub/models--deepseek-ai--DeepSeek-R1-Distill-Qwen-1.5B/snapshots/ad9f0ae0864d7fbcd1cd905e3c6c5b069cc8b562
+
+▶ Creating GRPOTrainer from pretrained model...
+
+✓ Trainer created: GRPOTrainer(model='/lustre/fsw/portfolios/nvr/users/yidong/data/models/huggingface_hub/hub/models--deepseek-ai--DeepSeek-R1-Distill-Qwen-1.5B/snapshots/ad9f0ae0864d7fbcd1cd905e3c6c5b069cc8b562', batch=8x4)
+  Effective batch size: 32
+
+▶ Starting training on DeepScaler dataset...
+2026-01-17 13:53:14,936	INFO worker.py:1723 -- Connecting to existing Ray cluster at address: 10.49.195.112:54514...
+2026-01-17 13:53:14,947	INFO worker.py:1908 -- Connected to Ray cluster. View the dashboard at [1m[32mhttp://10.49.195.112:8265 [39m[22m
+No chat template provided, using tokenizer's default
+
+▶ Setting up data...
+Loading agentica-org/DeepScaleR-Preview-Dataset for training and validation
+Initialized TensorboardLogger at /lustre/fsw/portfolios/nvr/users/yidong/logs/grpo-new-api-test/exp_008/tensorboard
+GPU monitoring started with collection interval=10.0s, flush interval=10.0s
+Traceback (most recent call last):
+  File "/lustre/fs1/portfolios/nvr/projects/nvr_lpr_agentic/users/yidong/Projects/RL/examples/test_new_grpo_api.py", line 98, in <module>
+    sys.exit(main())
+             ^^^^^^
+  File "/lustre/fs1/portfolios/nvr/projects/nvr_lpr_agentic/users/yidong/Projects/RL/examples/test_new_grpo_api.py", line 84, in main
+    result = trainer.fit(dataset="DeepScaler")
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fsw/portfolios/nvr/users/yidong/Projects/RL/nemo_rl/algorithms/grpo/trainer.py", line 544, in fit
+    ) = setup(self.config, tokenizer, train_dataset, val_dataset)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fsw/portfolios/nvr/users/yidong/Projects/RL/nemo_rl/algorithms/grpo_legacy.py", line 237, in setup
+    checkpointer = CheckpointManager(master_config["checkpointing"])
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fsw/portfolios/nvr/users/yidong/Projects/RL/nemo_rl/utils/checkpoint.py", line 98, in __init__
+    self.metric_name: str | None = config["metric_name"]
+                                   ~~~~~~^^^^^^^^^^^^^^^
+KeyError: 'metric_name'

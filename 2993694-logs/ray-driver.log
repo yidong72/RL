@@ -1,0 +1,62 @@
+/usr/local/lib/python3.12/dist-packages/pydantic/_internal/_generate_schema.py:2225: UnsupportedFieldAttributeWarning: The 'repr' attribute with value False was provided to the `Field()` function, which has no effect in the context it was used. 'repr' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+  warnings.warn(
+/usr/local/lib/python3.12/dist-packages/pydantic/_internal/_generate_schema.py:2225: UnsupportedFieldAttributeWarning: The 'frozen' attribute with value True was provided to the `Field()` function, which has no effect in the context it was used. 'frozen' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+  warnings.warn(
+2026-01-17 15:57:47,561	INFO worker.py:1771 -- Connecting to existing Ray cluster at address: 10.49.193.122:54514...
+2026-01-17 15:57:47,570	INFO worker.py:1942 -- Connected to Ray cluster. View the dashboard at [1m[32mhttp://10.49.193.122:8265 [39m[22m
+============================================================
+ Testing New GRPOTrainer API 
+============================================================
+Max steps: 10
+GPUs per node: 8
+Num nodes: 1
+Prompts per step: 8
+Generations per prompt: 4
+============================================================
+Using HuggingFace model: deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B
+
+▶ Creating GRPOTrainer from pretrained model...
+
+✓ Trainer created: GRPOTrainer(model='deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B', batch=8x4)
+  Effective batch size: 32
+
+▶ Starting training on DeepScaler dataset...
+No chat template provided, using tokenizer's default
+
+▶ Setting up data...
+Loading agentica-org/DeepScaleR-Preview-Dataset for training and validation
+Initialized TensorboardLogger at /lustre/fsw/portfolios/nvr/users/yidong/logs/grpo-new-api-test/exp_021/tensorboard
+GPU monitoring started with collection interval=10.0s, flush interval=10.0s
+Traceback (most recent call last):
+  File "/lustre/fs1/portfolios/nvr/projects/nvr_lpr_agentic/users/yidong/Projects/RL/examples/test_new_grpo_api.py", line 96, in <module>
+    sys.exit(main())
+             ^^^^^^
+  File "/lustre/fs1/portfolios/nvr/projects/nvr_lpr_agentic/users/yidong/Projects/RL/examples/test_new_grpo_api.py", line 80, in main
+    result = trainer.fit(dataset="DeepScaler")
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fsw/portfolios/nvr/users/yidong/Projects/RL/nemo_rl/algorithms/grpo/trainer.py", line 579, in fit
+    ) = setup(self.config, tokenizer, train_dataset, val_dataset)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fsw/portfolios/nvr/users/yidong/Projects/RL/nemo_rl/algorithms/grpo_legacy.py", line 232, in setup
+    logger.log_hyperparams(master_config)
+  File "/lustre/fsw/portfolios/nvr/users/yidong/Projects/RL/nemo_rl/utils/logger.py", line 1009, in log_hyperparams
+    logger.log_hyperparams(params)
+  File "/lustre/fsw/portfolios/nvr/users/yidong/Projects/RL/nemo_rl/utils/logger.py", line 259, in log_hyperparams
+    self.writer.add_hparams(flatten_dict(params), {})
+  File "/usr/local/lib/python3.12/dist-packages/torch/utils/tensorboard/writer.py", line 330, in add_hparams
+    exp, ssi, sei = hparams(hparam_dict, metric_dict, hparam_domain_discrete)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/torch/utils/tensorboard/summary.py", line 194, in hparams
+    from tensorboard.plugins.hparams.metadata import (
+  File "/usr/local/lib/python3.12/dist-packages/tensorboard/plugins/hparams/metadata.py", line 32, in <module>
+    NULL_TENSOR = tensor_util.make_tensor_proto(
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/tensorboard/util/tensor_util.py", line 405, in make_tensor_proto
+    numpy_dtype = dtypes.as_dtype(nparray.dtype)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/tensorboard/compat/tensorflow_stub/dtypes.py", line 677, in as_dtype
+    if type_value.type == np.string_ or type_value.type == np.unicode_:
+                          ^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/numpy/__init__.py", line 400, in __getattr__
+    raise AttributeError(
+AttributeError: `np.string_` was removed in the NumPy 2.0 release. Use `np.bytes_` instead.

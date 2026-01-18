@@ -1,0 +1,64 @@
+============================================================
+ Testing New GRPOTrainer API 
+============================================================
+Max steps: 10
+GPUs per node: 8
+Num nodes: 1
+Prompts per step: 8
+Generations per prompt: 4
+============================================================
+
+▶ Creating GRPOTrainer from pretrained model...
+
+✓ Trainer created: GRPOTrainer(model='deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B', batch=8x4)
+  Effective batch size: 32
+
+▶ Starting training on DeepScaler dataset...
+2026-01-17 13:47:30,171	INFO worker.py:1723 -- Connecting to existing Ray cluster at address: 10.49.194.204:54514...
+2026-01-17 13:47:30,182	INFO worker.py:1908 -- Connected to Ray cluster. View the dashboard at [1m[32mhttp://10.49.194.204:8265 [39m[22m
+Traceback (most recent call last):
+  File "/lustre/fs1/portfolios/nvr/projects/nvr_lpr_agentic/users/yidong/Projects/RL/examples/test_new_grpo_api.py", line 88, in <module>
+    sys.exit(main())
+             ^^^^^^
+  File "/lustre/fs1/portfolios/nvr/projects/nvr_lpr_agentic/users/yidong/Projects/RL/examples/test_new_grpo_api.py", line 74, in main
+    result = trainer.fit(dataset="DeepScaler")
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fsw/portfolios/nvr/users/yidong/Projects/RL/nemo_rl/algorithms/grpo/trainer.py", line 466, in fit
+    tokenizer = get_tokenizer(self.config["policy"]["tokenizer"])
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fsw/portfolios/nvr/users/yidong/Projects/RL/nemo_rl/algorithms/utils.py", line 275, in get_tokenizer
+    tokenizer = AutoTokenizer.from_pretrained(
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/transformers/models/auto/tokenization_auto.py", line 1156, in from_pretrained
+    return tokenizer_class.from_pretrained(pretrained_model_name_or_path, *inputs, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/transformers/tokenization_utils_base.py", line 2113, in from_pretrained
+    return cls._from_pretrained(
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/transformers/tokenization_utils_base.py", line 2395, in _from_pretrained
+    tokenizer = cls._patch_mistral_regex(
+                ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/transformers/tokenization_utils_base.py", line 2438, in _patch_mistral_regex
+    if _is_local or is_base_mistral(pretrained_model_name_or_path):
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/transformers/tokenization_utils_base.py", line 2432, in is_base_mistral
+    model = model_info(model_id)
+            ^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/huggingface_hub/utils/_validators.py", line 114, in _inner_fn
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/huggingface_hub/hf_api.py", line 2660, in model_info
+    r = get_session().get(path, headers=headers, timeout=timeout, params=params)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/requests/sessions.py", line 602, in get
+    return self.request("GET", url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/requests/sessions.py", line 589, in request
+    resp = self.send(prep, **send_kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/requests/sessions.py", line 703, in send
+    r = adapter.send(request, **kwargs)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/huggingface_hub/utils/_http.py", line 106, in send
+    raise OfflineModeIsEnabled(
+huggingface_hub.errors.OfflineModeIsEnabled: Cannot reach https://huggingface.co/api/models/deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B: offline mode is enabled. To disable it, please unset the `HF_HUB_OFFLINE` environment variable.

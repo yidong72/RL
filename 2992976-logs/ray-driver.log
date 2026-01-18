@@ -1,0 +1,379 @@
+Loaded configuration from: examples/configs/recipes/llm/grpo-deepseek-r1-distill-qwen-1.5b-deepscaler-test.yaml
+Overrides: ['grpo.max_num_steps=10', 'grpo.num_prompts_per_step=8', 'grpo.num_generations_per_prompt=4', 'checkpointing.enabled=false', 'logger.log_dir=/lustre/fsw/portfolios/nvr/users/yidong/logs/grpo-legacy-test', 'cluster.gpus_per_node=8']
+Applied CLI overrides
+Final config:
+{'checkpointing': {'checkpoint_dir': 'results/grpo-deepseek-qwen-1.5b-deepscaler-test',
+                   'checkpoint_must_save_by': None,
+                   'enabled': False,
+                   'higher_is_better': True,
+                   'keep_top_k': 3,
+                   'metric_name': 'val:accuracy',
+                   'model_save_format': 'safetensors',
+                   'save_consolidated': False,
+                   'save_period': 5},
+ 'cluster': {'gpus_per_node': 8, 'num_nodes': 1},
+ 'data': {'dataset_name': 'DeepScaler',
+          'env_name': 'math',
+          'max_input_seq_length': 1024,
+          'num_workers': 1,
+          'processor': 'math_hf_data_processor',
+          'prompt_file': 'examples/prompts/cot.txt',
+          'shuffle': True,
+          'system_prompt_file': None},
+ 'env': {'math': {'math_verify_impl': 'hf_math_verify', 'num_workers': 8}},
+ 'grpo': {'async_grpo': {'enabled': False,
+                         'in_flight_weight_updates': False,
+                         'max_trajectory_age_steps': 1,
+                         'recompute_kv_cache_after_weight_updates': False},
+          'batch_multiplier': 1,
+          'dynamic_sampling_max_gen_batches': 10,
+          'max_num_epochs': 1,
+          'max_num_steps': 10,
+          'max_rollout_turns': 1,
+          'max_val_samples': 256,
+          'normalize_rewards': True,
+          'num_generations_per_prompt': 4,
+          'num_prompts_per_step': 8,
+          'overlong_filtering': False,
+          'reward_scaling': {'enabled': False,
+                             'source_max': 1.0,
+                             'source_min': 0.0,
+                             'target_max': 1.0,
+                             'target_min': 0.0},
+          'reward_shaping': {'enabled': False,
+                             'max_response_length': 2048,
+                             'overlong_buffer_length': 128,
+                             'overlong_buffer_penalty': 1},
+          'seed': 42,
+          'use_dynamic_sampling': False,
+          'use_leave_one_out_baseline': True,
+          'val_at_start': False,
+          'val_batch_size': 256,
+          'val_period': 5},
+ 'logger': {'gpu_monitoring': {'collection_interval': 10, 'flush_interval': 10},
+            'log_dir': '/lustre/fsw/portfolios/nvr/users/yidong/logs/grpo-legacy-test',
+            'mlflow': {'experiment_name': 'grpo-dev',
+                       'run_name': 'grpo-dev-logger'},
+            'mlflow_enabled': False,
+            'monitor_gpus': True,
+            'num_val_samples_to_print': 0,
+            'swanlab': {'name': 'grpo-dev-logger', 'project': 'grpo-dev'},
+            'swanlab_enabled': False,
+            'tensorboard': {},
+            'tensorboard_enabled': True,
+            'wandb': {'name': 'grpo-dev-logger', 'project': 'grpo-dev'},
+            'wandb_enabled': False},
+ 'loss_fn': {'force_on_policy_ratio': False,
+             'kl_input_clamp_value': 20.0,
+             'kl_output_clamp_value': 10.0,
+             'ratio_clip_c': None,
+             'ratio_clip_max': 0.2,
+             'ratio_clip_min': 0.2,
+             'reference_policy_kl_penalty': 0.01,
+             'reference_policy_kl_type': 'k3',
+             'sequence_level_importance_ratios': False,
+             'token_level_loss': True,
+             'truncated_importance_sampling_ratio': None,
+             'use_importance_sampling_correction': False,
+             'use_on_policy_kl_approximation': False},
+ 'policy': {'dtensor_cfg': {'_v2': True,
+                            'activation_checkpointing': False,
+                            'context_parallel_size': 1,
+                            'cpu_offload': False,
+                            'custom_parallel_plan': None,
+                            'enabled': True,
+                            'sequence_parallel': False,
+                            'tensor_parallel_size': 1},
+            'dynamic_batching': {'enabled': False,
+                                 'logprob_mb_tokens': 8192,
+                                 'sequence_length_round': 64,
+                                 'train_mb_tokens': 4096},
+            'generation': {'backend': 'vllm',
+                           'colocated': {'enabled': True,
+                                         'resources': {'gpus_per_node': None,
+                                                       'num_nodes': None}},
+                           'max_new_tokens': 1024,
+                           'mcore_generation_config': {'block_size_tokens': 256,
+                                                       'buffer_guaranteed_fraction': 0.1,
+                                                       'buffer_size_gb': 20,
+                                                       'enable_chunked_prefill': True,
+                                                       'max_tokens': 16384,
+                                                       'num_cuda_graphs': 16,
+                                                       'unified_memory_level': 0,
+                                                       'use_cuda_graphs_for_non_decode_steps': True},
+                           'stop_strings': None,
+                           'stop_token_ids': None,
+                           'temperature': 1.0,
+                           'top_k': None,
+                           'top_p': 1.0,
+                           'vllm_cfg': {'async_engine': False,
+                                        'enable_vllm_metrics_logger': True,
+                                        'enforce_eager': False,
+                                        'expert_parallel_size': 1,
+                                        'gpu_memory_utilization': 0.7,
+                                        'kv_cache_dtype': 'auto',
+                                        'max_model_len': 2048,
+                                        'num_first_layers_in_bf16': 0,
+                                        'num_last_layers_in_bf16': 0,
+                                        'pipeline_parallel_size': 1,
+                                        'precision': 'bfloat16',
+                                        'tensor_parallel_size': 1,
+                                        'use_deep_gemm': False,
+                                        'vllm_metrics_logger_interval': 0.5},
+                           'vllm_kwargs': {}},
+            'generation_batch_size': 32,
+            'hf_config_overrides': {},
+            'logprob_batch_size': 4,
+            'logprob_chunk_size': None,
+            'make_sequence_length_divisible_by': 1,
+            'max_grad_norm': 1.0,
+            'max_total_sequence_length': 2048,
+            'megatron_cfg': {'activation_checkpointing': False,
+                             'apply_rope_fusion': True,
+                             'bias_activation_fusion': True,
+                             'context_parallel_size': 1,
+                             'converter_type': 'Qwen2ForCausalLM',
+                             'defer_fp32_logits': False,
+                             'distributed_data_parallel_config': {'data_parallel_sharding_strategy': 'optim_grads_params',
+                                                                  'grad_reduce_in_fp32': False,
+                                                                  'overlap_grad_reduce': True,
+                                                                  'overlap_param_gather': True,
+                                                                  'use_custom_fsdp': False},
+                             'empty_unused_memory_level': 1,
+                             'enabled': False,
+                             'env_vars': None,
+                             'expert_model_parallel_size': 1,
+                             'expert_tensor_parallel_size': 1,
+2026-01-17 13:07:44,585	INFO worker.py:1694 -- Connecting to existing Ray cluster at address: 10.49.196.170:54514...
+2026-01-17 13:07:44,594	INFO worker.py:1879 -- Connected to Ray cluster. View the dashboard at [1m[32mhttp://10.49.196.170:8265 [39m[22m
+                             'fp8_cfg': None,
+                             'freeze_moe_router': True,
+                             'moe_per_layer_logging': False,
+                             'moe_permute_fusion': False,
+                             'moe_router_bias_update_rate': 0.0,
+                             'moe_router_dtype': 'fp64',
+                             'moe_router_load_balancing_type': 'none',
+                             'num_layers_in_first_pipeline_stage': None,
+                             'num_layers_in_last_pipeline_stage': None,
+                             'optimizer': {'adam_beta1': 0.9,
+                                           'adam_beta2': 0.999,
+                                           'adam_eps': 1e-08,
+                                           'bf16': True,
+                                           'clip_grad': 1.0,
+                                           'fp16': False,
+                                           'lr': 5e-06,
+                                           'min_lr': 5e-07,
+                                           'optimizer': 'adam',
+                                           'optimizer_cpu_offload': False,
+                                           'optimizer_offload_fraction': 0.0,
+                                           'params_dtype': 'float32',
+                                           'sgd_momentum': 0.9,
+                                           'use_distributed_optimizer': True,
+                                           'use_precision_aware_optimizer': True,
+                                           'weight_decay': 0.01},
+                             'pipeline_dtype': 'bfloat16',
+                             'pipeline_model_parallel_size': 1,
+                             'scheduler': {'end_weight_decay': 0.01,
+                                           'lr_decay_iters': 1000,
+                                           'lr_decay_style': 'constant',
+                                           'lr_warmup_init': 5e-07,
+                                           'lr_warmup_iters': 13,
+                                           'start_weight_decay': 0.01,
+                                           'weight_decay_incr_style': 'constant'},
+                             'sequence_parallel': False,
+                             'tensor_model_parallel_size': 1},
+            'model_name': 'deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B',
+            'offload_optimizer_for_logprob': False,
+            'optimizer': {'kwargs': {'betas': [0.9, 0.999],
+                                     'eps': 1e-08,
+                                     'foreach': False,
+                                     'fused': False,
+                                     'lr': 5e-06,
+                                     'weight_decay': 0.01},
+                          'name': 'torch.optim.AdamW'},
+            'precision': 'bfloat16',
+            'scheduler': [{'kwargs': {'end_factor': 1.0,
+                                      'start_factor': 0.1,
+                                      'total_iters': 50},
+                           'name': 'torch.optim.lr_scheduler.LinearLR'},
+                          {'kwargs': {'factor': 1.0,
+                                      'total_iters': 10000000000},
+                           'name': 'torch.optim.lr_scheduler.ConstantLR'},
+                          {'milestones': [50]}],
+            'sequence_packing': {'algorithm': 'modified_first_fit_decreasing',
+                                 'enabled': True,
+                                 'logprob_mb_tokens': 8192,
+                                 'sequence_length_round': 64,
+                                 'train_mb_tokens': 4096},
+            'tokenizer': {'chat_template_kwargs': None,
+                          'name': 'deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B'},
+            'train_global_batch_size': 32,
+            'train_micro_batch_size': 2}}
+📊 Using log directory: /lustre/fsw/portfolios/nvr/users/yidong/logs/grpo-legacy-test/exp_010
+No chat template provided, using tokenizer's default
+
+▶ Setting up data...
+Loading agentica-org/DeepScaleR-Preview-Dataset for training and validation
+Initialized TensorboardLogger at /lustre/fsw/portfolios/nvr/users/yidong/logs/grpo-legacy-test/exp_010/tensorboard
+GPU monitoring started with collection interval=10s, flush interval=10s
+  ✓ Training dataloader loaded with 40315 samples
+  ✓ Validation dataloader loaded with 480 samples
+
+▶ Setting up compute cluster...
+  ✓ Ray cluster for policy initialized with 1 nodes
+
+▶ Setting up model and training...
+  ⚙️  Using sequential worker initialization (colocated mode)
+Initializing vllm_policy workers:   0%|          | 0/8 [00:00<?, ?worker/s]Initializing vllm_policy workers:  12%|█▎        | 1/8 [00:05<00:35,  5.06s/worker]Initializing vllm_policy workers:  38%|███▊      | 3/8 [00:05<00:06,  1.37s/worker]Initializing vllm_policy workers:  75%|███████▌  | 6/8 [00:05<00:01,  1.77worker/s]Initializing vllm_policy workers: 100%|██████████| 8/8 [00:05<00:00,  2.48worker/s]Initializing vllm_policy workers: 100%|██████████| 8/8 [00:05<00:00,  1.42worker/s]
+  ✓ 8 workers initialized in 5.65s
+[36m(VllmGenerationWorker pid=4173282)[0m WARNING:vllm_patch:vllm_worker.py:204: vLLM file 'v1/executor/ray_executor.py' not found at '/usr/local/lib/python3.12/dist-packages/vllm/v1/executor/ray_executor.py'. Skipping patch (may indicate older vLLM version).
+[36m(VllmGenerationWorker pid=4173282)[0m WARNING:nemo_rl.models.generation.vllm.vllm_worker:vllm_worker.py:524: Filtering out vLLM kwargs not supported in this version: {'logprobs_mode'}
+[36m(VllmGenerationWorker pid=4173288)[0m WARNING:vllm_patch:vllm_worker.py:204: vLLM file 'v1/executor/ray_executor.py' not found at '/usr/local/lib/python3.12/dist-packages/vllm/v1/executor/ray_executor.py'. Skipping patch (may indicate older vLLM version).[32m [repeated 7x across cluster] (Ray deduplicates logs by default. Set RAY_DEDUP_LOGS=0 to disable log deduplication, or see https://docs.ray.io/en/master/ray-observability/user-guides/configure-logging.html#log-deduplication for more options.)[0m
+[36m(VllmGenerationWorker pid=4173288)[0m WARNING:nemo_rl.models.generation.vllm.vllm_worker:vllm_worker.py:524: Filtering out vLLM kwargs not supported in this version: {'logprobs_mode'}[32m [repeated 6x across cluster][0m
+[36m(VllmGenerationWorker pid=4173282)[0m INFO 01-17 13:08:13 [__init__.py:239] Automatically detected platform cuda.
+[36m(VllmGenerationWorker pid=4173282)[0m INFO 01-17 13:08:40 [config.py:717] This model supports multiple tasks: {'score', 'generate', 'reward', 'classify', 'embed'}. Defaulting to 'generate'.
+[36m(VllmGenerationWorker pid=4173282)[0m INFO 01-17 13:08:40 [config.py:2003] Chunked prefill is enabled with max_num_batched_tokens=16384.
+[36m(VllmGenerationWorker pid=4173288)[0m INFO 01-17 13:08:16 [__init__.py:239] Automatically detected platform cuda.[32m [repeated 7x across cluster][0m
+[36m(VllmGenerationWorker pid=4173781)[0m INFO 01-17 13:08:42 [config.py:717] This model supports multiple tasks: {'embed', 'reward', 'generate', 'classify', 'score'}. Defaulting to 'generate'.
+[36m(VllmGenerationWorker pid=4173285)[0m INFO 01-17 13:08:44 [config.py:717] This model supports multiple tasks: {'reward', 'classify', 'embed', 'generate', 'score'}. Defaulting to 'generate'.
+[36m(VllmGenerationWorker pid=4173282)[0m INFO 01-17 13:08:44 [core.py:58] Initializing a V1 LLM engine (v0.8.5) with config: model='deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B', speculative_config=None, tokenizer='deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B', skip_tokenizer_init=True, tokenizer_mode=auto, revision=None, override_neuron_config=None, tokenizer_revision=None, trust_remote_code=True, dtype=torch.bfloat16, max_seq_len=2048, download_dir=None, load_format=LoadFormat.DUMMY, tensor_parallel_size=1, pipeline_parallel_size=1, disable_custom_all_reduce=False, quantization=None, enforce_eager=False, kv_cache_dtype=auto,  device_config=cuda, decoding_config=DecodingConfig(guided_decoding_backend='auto', reasoning_backend=None), observability_config=ObservabilityConfig(show_hidden_metrics=False, otlp_traces_endpoint=None, collect_model_forward_time=False, collect_model_execute_time=False), seed=0, served_model_name=deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B, num_scheduler_steps=1, multi_step_stream_outputs=True, enable_prefix_caching=True, chunked_prefill_enabled=True, use_async_output_proc=True, disable_mm_preprocessor_cache=False, mm_processor_kwargs=None, pooler_config=None, compilation_config={"level":3,"custom_ops":["none"],"splitting_ops":["vllm.unified_attention","vllm.unified_attention_with_output"],"use_inductor":true,"compile_sizes":[],"use_cudagraph":true,"cudagraph_num_of_warmups":1,"cudagraph_capture_sizes":[512,504,496,488,480,472,464,456,448,440,432,424,416,408,400,392,384,376,368,360,352,344,336,328,320,312,304,296,288,280,272,264,256,248,240,232,224,216,208,200,192,184,176,168,160,152,144,136,128,120,112,104,96,88,80,72,64,56,48,40,32,24,16,8,4,2,1],"max_capture_size":512}
+[36m(VllmGenerationWorker pid=4173282)[0m INFO 01-17 13:08:44 [worker_base.py:589] Injected <class 'nemo_rl.models.generation.vllm.vllm_backend.VllmInternalWorkerExtension'> into <class 'vllm.v1.worker.gpu_worker.Worker'> for extended collective_rpc calls ['_maybe_process_fp8_kv_cache', 'cleanup', 'get_zmq_address', 'init_collective', 'maybe_init_zmq', 'prepare_refit_info', 'report_device_id', 'start_gpu_profiling', 'stop_gpu_profiling', 'update_weights_from_collective', 'update_weights_via_ipc_zmq']
+[36m(VllmGenerationWorker pid=4173282)[0m WARNING 01-17 13:08:44 [utils.py:2522] Methods determine_num_available_blocks,device_config,get_cache_block_size_bytes,initialize_cache not implemented in <vllm.v1.worker.gpu_worker.Worker object at 0x1521f4e4caa0>
+[36m(VllmGenerationWorker pid=4173286)[0m INFO 01-17 13:08:44 [config.py:717] This model supports multiple tasks: {'score', 'reward', 'embed', 'classify', 'generate'}. Defaulting to 'generate'.
+[36m(VllmGenerationWorker pid=4173281)[0m INFO 01-17 13:08:45 [config.py:717] This model supports multiple tasks: {'generate', 'reward', 'embed', 'classify', 'score'}. Defaulting to 'generate'.
+[36m(VllmGenerationWorker pid=4173280)[0m INFO 01-17 13:08:45 [config.py:717] This model supports multiple tasks: {'score', 'reward', 'generate', 'embed', 'classify'}. Defaulting to 'generate'.
+[36m(VllmGenerationWorker pid=4173280)[0m INFO 01-17 13:08:45 [config.py:2003] Chunked prefill is enabled with max_num_batched_tokens=16384.[32m [repeated 5x across cluster][0m
+[36m(VllmGenerationWorker pid=4173282)[0m INFO 01-17 13:08:46 [parallel_state.py:1004] rank 0 in world size 1 is assigned as DP rank 0, PP rank 0, TP rank 0
+[36m(VllmGenerationWorker pid=4173282)[0m INFO 01-17 13:08:46 [cuda.py:221] Using Flash Attention backend on V1 engine.
+[36m(VllmGenerationWorker pid=4173282)[0m WARNING 01-17 13:08:46 [topk_topp_sampler.py:69] FlashInfer is not available. Falling back to the PyTorch-native implementation of top-p & top-k sampling. For the best performance, please install FlashInfer.
+[36m(VllmGenerationWorker pid=4173282)[0m INFO 01-17 13:08:46 [gpu_model_runner.py:1329] Starting to load model deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B...
+[36m(VllmGenerationWorker pid=4173288)[0m INFO 01-17 13:08:47 [config.py:717] This model supports multiple tasks: {'score', 'embed', 'generate', 'classify', 'reward'}. Defaulting to 'generate'.
+[36m(VllmGenerationWorker pid=4173282)[0m INFO 01-17 13:08:47 [gpu_model_runner.py:1347] Model loading took 3.3461 GiB and 0.963379 seconds
+[36m(VllmGenerationWorker pid=4173283)[0m INFO 01-17 13:08:48 [config.py:717] This model supports multiple tasks: {'embed', 'generate', 'reward', 'score', 'classify'}. Defaulting to 'generate'.
+[36m(VllmGenerationWorker pid=4173280)[0m INFO 01-17 13:08:49 [core.py:58] Initializing a V1 LLM engine (v0.8.5) with config: model='deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B', speculative_config=None, tokenizer='deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B', skip_tokenizer_init=True, tokenizer_mode=auto, revision=None, override_neuron_config=None, tokenizer_revision=None, trust_remote_code=True, dtype=torch.bfloat16, max_seq_len=2048, download_dir=None, load_format=LoadFormat.DUMMY, tensor_parallel_size=1, pipeline_parallel_size=1, disable_custom_all_reduce=False, quantization=None, enforce_eager=False, kv_cache_dtype=auto,  device_config=cuda, decoding_config=DecodingConfig(guided_decoding_backend='auto', reasoning_backend=None), observability_config=ObservabilityConfig(show_hidden_metrics=False, otlp_traces_endpoint=None, collect_model_forward_time=False, collect_model_execute_time=False), seed=2, served_model_name=deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B, num_scheduler_steps=1, multi_step_stream_outputs=True, enable_prefix_caching=True, chunked_prefill_enabled=True, use_async_output_proc=True, disable_mm_preprocessor_cache=False, mm_processor_kwargs=None, pooler_config=None, compilation_config={"level":3,"custom_ops":["none"],"splitting_ops":["vllm.unified_attention","vllm.unified_attention_with_output"],"use_inductor":true,"compile_sizes":[],"use_cudagraph":true,"cudagraph_num_of_warmups":1,"cudagraph_capture_sizes":[512,504,496,488,480,472,464,456,448,440,432,424,416,408,400,392,384,376,368,360,352,344,336,328,320,312,304,296,288,280,272,264,256,248,240,232,224,216,208,200,192,184,176,168,160,152,144,136,128,120,112,104,96,88,80,72,64,56,48,40,32,24,16,8,4,2,1],"max_capture_size":512}[32m [repeated 5x across cluster][0m
+[36m(VllmGenerationWorker pid=4173280)[0m INFO 01-17 13:08:49 [worker_base.py:589] Injected <class 'nemo_rl.models.generation.vllm.vllm_backend.VllmInternalWorkerExtension'> into <class 'vllm.v1.worker.gpu_worker.Worker'> for extended collective_rpc calls ['_maybe_process_fp8_kv_cache', 'cleanup', 'get_zmq_address', 'init_collective', 'maybe_init_zmq', 'prepare_refit_info', 'report_device_id', 'start_gpu_profiling', 'stop_gpu_profiling', 'update_weights_from_collective', 'update_weights_via_ipc_zmq'][32m [repeated 5x across cluster][0m
+[36m(VllmGenerationWorker pid=4173280)[0m WARNING 01-17 13:08:49 [utils.py:2522] Methods determine_num_available_blocks,device_config,get_cache_block_size_bytes,initialize_cache not implemented in <vllm.v1.worker.gpu_worker.Worker object at 0x1521c47fe2d0>[32m [repeated 5x across cluster][0m
+[36m(VllmGenerationWorker pid=4173283)[0m INFO 01-17 13:08:48 [config.py:2003] Chunked prefill is enabled with max_num_batched_tokens=16384.[32m [repeated 2x across cluster][0m
+[36m(VllmGenerationWorker pid=4173288)[0m INFO 01-17 13:08:51 [parallel_state.py:1004] rank 0 in world size 1 is assigned as DP rank 0, PP rank 0, TP rank 0[32m [repeated 6x across cluster][0m
+[36m(VllmGenerationWorker pid=4173288)[0m INFO 01-17 13:08:51 [cuda.py:221] Using Flash Attention backend on V1 engine.[32m [repeated 6x across cluster][0m
+[36m(VllmGenerationWorker pid=4173288)[0m WARNING 01-17 13:08:51 [topk_topp_sampler.py:69] FlashInfer is not available. Falling back to the PyTorch-native implementation of top-p & top-k sampling. For the best performance, please install FlashInfer.[32m [repeated 6x across cluster][0m
+[36m(VllmGenerationWorker pid=4173288)[0m INFO 01-17 13:08:51 [gpu_model_runner.py:1329] Starting to load model deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B...[32m [repeated 6x across cluster][0m
+[36m(VllmGenerationWorker pid=4173282)[0m INFO 01-17 13:08:53 [backends.py:420] Using cache directory: /root/.cache/vllm_0/torch_compile_cache/b225967f84/rank_0_0 for vLLM's torch.compile
+[36m(VllmGenerationWorker pid=4173282)[0m INFO 01-17 13:08:53 [backends.py:430] Dynamo bytecode transform time: 5.81 s
+[36m(VllmGenerationWorker pid=4173283)[0m INFO 01-17 13:08:52 [gpu_model_runner.py:1347] Model loading took 3.3461 GiB and 0.136615 seconds[32m [repeated 7x across cluster][0m
+[36m(VllmGenerationWorker pid=4173283)[0m INFO 01-17 13:08:51 [core.py:58] Initializing a V1 LLM engine (v0.8.5) with config: model='deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B', speculative_config=None, tokenizer='deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B', skip_tokenizer_init=True, tokenizer_mode=auto, revision=None, override_neuron_config=None, tokenizer_revision=None, trust_remote_code=True, dtype=torch.bfloat16, max_seq_len=2048, download_dir=None, load_format=LoadFormat.DUMMY, tensor_parallel_size=1, pipeline_parallel_size=1, disable_custom_all_reduce=False, quantization=None, enforce_eager=False, kv_cache_dtype=auto,  device_config=cuda, decoding_config=DecodingConfig(guided_decoding_backend='auto', reasoning_backend=None), observability_config=ObservabilityConfig(show_hidden_metrics=False, otlp_traces_endpoint=None, collect_model_forward_time=False, collect_model_execute_time=False), seed=7, served_model_name=deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B, num_scheduler_steps=1, multi_step_stream_outputs=True, enable_prefix_caching=True, chunked_prefill_enabled=True, use_async_output_proc=True, disable_mm_preprocessor_cache=False, mm_processor_kwargs=None, pooler_config=None, compilation_config={"level":3,"custom_ops":["none"],"splitting_ops":["vllm.unified_attention","vllm.unified_attention_with_output"],"use_inductor":true,"compile_sizes":[],"use_cudagraph":true,"cudagraph_num_of_warmups":1,"cudagraph_capture_sizes":[512,504,496,488,480,472,464,456,448,440,432,424,416,408,400,392,384,376,368,360,352,344,336,328,320,312,304,296,288,280,272,264,256,248,240,232,224,216,208,200,192,184,176,168,160,152,144,136,128,120,112,104,96,88,80,72,64,56,48,40,32,24,16,8,4,2,1],"max_capture_size":512}[32m [repeated 2x across cluster][0m
+[36m(VllmGenerationWorker pid=4173283)[0m INFO 01-17 13:08:51 [worker_base.py:589] Injected <class 'nemo_rl.models.generation.vllm.vllm_backend.VllmInternalWorkerExtension'> into <class 'vllm.v1.worker.gpu_worker.Worker'> for extended collective_rpc calls ['_maybe_process_fp8_kv_cache', 'cleanup', 'get_zmq_address', 'init_collective', 'maybe_init_zmq', 'prepare_refit_info', 'report_device_id', 'start_gpu_profiling', 'stop_gpu_profiling', 'update_weights_from_collective', 'update_weights_via_ipc_zmq'][32m [repeated 2x across cluster][0m
+[36m(VllmGenerationWorker pid=4173283)[0m WARNING 01-17 13:08:51 [utils.py:2522] Methods determine_num_available_blocks,device_config,get_cache_block_size_bytes,initialize_cache not implemented in <vllm.v1.worker.gpu_worker.Worker object at 0x1521c48ccaa0>[32m [repeated 2x across cluster][0m
+[36m(VllmGenerationWorker pid=4173282)[0m INFO 01-17 13:08:56 [backends.py:136] Cache the graph of shape None for later use
+[36m(VllmGenerationWorker pid=4173283)[0m INFO 01-17 13:08:51 [parallel_state.py:1004] rank 0 in world size 1 is assigned as DP rank 0, PP rank 0, TP rank 0
+[36m(VllmGenerationWorker pid=4173283)[0m INFO 01-17 13:08:51 [cuda.py:221] Using Flash Attention backend on V1 engine.
+[36m(VllmGenerationWorker pid=4173283)[0m WARNING 01-17 13:08:51 [topk_topp_sampler.py:69] FlashInfer is not available. Falling back to the PyTorch-native implementation of top-p & top-k sampling. For the best performance, please install FlashInfer.
+[36m(VllmGenerationWorker pid=4173283)[0m INFO 01-17 13:08:51 [gpu_model_runner.py:1329] Starting to load model deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B...
+[36m(VllmGenerationWorker pid=4173283)[0m INFO 01-17 13:08:58 [backends.py:420] Using cache directory: /root/.cache/vllm_7/torch_compile_cache/b225967f84/rank_0_0 for vLLM's torch.compile[32m [repeated 7x across cluster][0m
+[36m(VllmGenerationWorker pid=4173283)[0m INFO 01-17 13:08:58 [backends.py:430] Dynamo bytecode transform time: 5.82 s[32m [repeated 7x across cluster][0m
+[36m(VllmGenerationWorker pid=4173282)[0m INFO 01-17 13:09:13 [backends.py:148] Compiling a graph for general shape takes 19.84 s
+[36m(VllmGenerationWorker pid=4173283)[0m INFO 01-17 13:09:00 [backends.py:136] Cache the graph of shape None for later use[32m [repeated 7x across cluster][0m
+[36m(VllmGenerationWorker pid=4173283)[0m INFO 01-17 13:09:18 [backends.py:148] Compiling a graph for general shape takes 19.99 s[32m [repeated 7x across cluster][0m
+[36m(VllmGenerationWorker pid=4173282)[0m INFO 01-17 13:09:24 [monitor.py:33] torch.compile takes 25.65 s in total
+[36m(VllmGenerationWorker pid=4173282)[0m INFO 01-17 13:09:24 [kv_cache_utils.py:634] GPU KV cache size: 1,708,800 tokens
+[36m(VllmGenerationWorker pid=4173282)[0m INFO 01-17 13:09:24 [kv_cache_utils.py:637] Maximum concurrency for 2,048 tokens per request: 834.38x
+[36m(VllmGenerationWorker pid=4173283)[0m INFO 01-17 13:09:29 [monitor.py:33] torch.compile takes 25.81 s in total[32m [repeated 7x across cluster][0m
+[36m(VllmGenerationWorker pid=4173283)[0m INFO 01-17 13:09:30 [kv_cache_utils.py:634] GPU KV cache size: 1,708,800 tokens[32m [repeated 7x across cluster][0m
+[36m(VllmGenerationWorker pid=4173283)[0m INFO 01-17 13:09:30 [kv_cache_utils.py:637] Maximum concurrency for 2,048 tokens per request: 834.38x[32m [repeated 7x across cluster][0m
+[36m(VllmGenerationWorker pid=4173285)[0m INFO 01-17 13:09:52 [gpu_model_runner.py:1686] Graph capturing finished in 24 secs, took 0.56 GiB
+[36m(VllmGenerationWorker pid=4173285)[0m INFO 01-17 13:09:52 [core.py:159] init engine (profile, create kv cache, warmup model) took 62.90 seconds
+[36m(VllmGenerationWorker pid=4173280)[0m INFO 01-17 13:10:01 [gpu_model_runner.py:1686] Graph capturing finished in 33 secs, took 0.56 GiB[32m [repeated 3x across cluster][0m
+[36m(VllmGenerationWorker pid=4173280)[0m INFO 01-17 13:10:01 [core.py:159] init engine (profile, create kv cache, warmup model) took 71.03 seconds[32m [repeated 3x across cluster][0m
+[36m(VllmGenerationWorker pid=4173281)[0m INFO 01-17 13:10:04 [block_pool.py:264] Successfully reset prefix cache
+[36m(VllmGenerationWorker pid=4173281)[0m INFO 01-17 13:10:04 [block_pool.py:264] Successfully reset prefix cache
+[36m(VllmGenerationWorker pid=4173281)[0m INFO 01-17 13:10:06 [gpu_worker.py:95] Sleep mode freed 54.72 GiB memory, 1.32 GiB memory is still in use.
+[36m(VllmGenerationWorker pid=4173281)[0m INFO 01-17 13:10:06 [executor_base.py:210] It took 2.273441 seconds to fall asleep.
+[36m(VllmGenerationWorker pid=4173288)[0m INFO 01-17 13:10:04 [gpu_model_runner.py:1686] Graph capturing finished in 35 secs, took 0.56 GiB[32m [repeated 4x across cluster][0m
+[36m(VllmGenerationWorker pid=4173288)[0m INFO 01-17 13:10:04 [core.py:159] init engine (profile, create kv cache, warmup model) took 72.80 seconds[32m [repeated 4x across cluster][0m
+Traceback (most recent call last):
+  File "/lustre/fs1/portfolios/nvr/projects/nvr_lpr_agentic/users/yidong/Projects/RL/examples/run_grpo_math.py", line 260, in <module>
+    main()
+  File "/lustre/fs1/portfolios/nvr/projects/nvr_lpr_agentic/users/yidong/Projects/RL/examples/run_grpo_math.py", line 192, in main
+    ) = setup(config, tokenizer, dataset, val_dataset)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fsw/portfolios/nvr/users/yidong/Projects/RL/nemo_rl/algorithms/grpo_legacy.py", line 562, in setup
+    policy, policy_time = init_policy()
+                          ^^^^^^^^^^^^^
+  File "/lustre/fsw/portfolios/nvr/users/yidong/Projects/RL/nemo_rl/algorithms/grpo_legacy.py", line 467, in init_policy
+    p = Policy(
+        ^^^^^^^
+  File "/lustre/fsw/portfolios/nvr/users/yidong/Projects/RL/nemo_rl/models/policy/lm_policy.py", line 255, in __init__
+    self.worker_group = RayWorkerGroup(
+                        ^^^^^^^^^^^^^^^
+  File "/lustre/fsw/portfolios/nvr/users/yidong/Projects/RL/nemo_rl/distributed/worker_groups.py", line 398, in __init__
+    self._create_workers_from_bundle_indices(
+  File "/lustre/fsw/portfolios/nvr/users/yidong/Projects/RL/nemo_rl/distributed/worker_groups.py", line 446, in _create_workers_from_bundle_indices
+    py_executable = create_local_venv_on_each_node(
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fsw/portfolios/nvr/users/yidong/Projects/RL/nemo_rl/utils/venvs.py", line 178, in create_local_venv_on_each_node
+    paths = ray.get([actor for actor in actors])
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/ray/_private/auto_init_hook.py", line 21, in auto_init_wrapper
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/ray/_private/client_mode_hook.py", line 103, in wrapper
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/ray/_private/worker.py", line 2822, in get
+    values, debugger_breakpoint = worker.get_objects(object_refs, timeout=timeout)
+                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/ray/_private/worker.py", line 930, in get_objects
+    raise value.as_instanceof_cause()
+ray.exceptions.RayTaskError(FileNotFoundError): [36mray::_env_builder()[39m (pid=4171382, ip=10.49.196.170)
+  File "/lustre/fsw/portfolios/nvr/users/yidong/Projects/RL/nemo_rl/utils/venvs.py", line 144, in _env_builder
+    return create_local_venv(py_executable, venv_name, force_rebuild=force_rebuild)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fs1/portfolios/nvr/projects/nvr_lpr_agentic/users/yidong/Projects/RL/nemo_rl/utils/venvs.py", line 81, in create_local_venv
+    subprocess.run(uv_venv_cmd, check=True)
+  File "/usr/lib/python3.12/subprocess.py", line 548, in run
+    with Popen(*popenargs, **kwargs) as process:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/subprocess.py", line 1026, in __init__
+    self._execute_child(args, executable, preexec_fn, close_fds,
+  File "/usr/lib/python3.12/subprocess.py", line 1955, in _execute_child
+    raise child_exception_type(errno_num, err_msg, err_filename)
+FileNotFoundError: [Errno 2] No such file or directory: 'uv'
+[36m(VllmGenerationWorker pid=4173283)[0m WARNING:nemo_rl.models.generation.vllm.vllm_worker:vllm_worker.py:524: Filtering out vLLM kwargs not supported in this version: {'logprobs_mode'}
+[36m(VllmGenerationWorker pid=4173781)[0m INFO 01-17 13:10:04 [block_pool.py:264] Successfully reset prefix cache[32m [repeated 14x across cluster][0m
+[36m(VllmGenerationWorker pid=4173781)[0m INFO 01-17 13:10:07 [gpu_worker.py:95] Sleep mode freed 54.72 GiB memory, 1.32 GiB memory is still in use.[32m [repeated 7x across cluster][0m
+[36m(VllmGenerationWorker pid=4173781)[0m INFO 01-17 13:10:07 [executor_base.py:210] It took 2.676122 seconds to fall asleep.[32m [repeated 7x across cluster][0m
+2026-01-17 13:10:08,686	INFO worker.py:1694 -- Connecting to existing Ray cluster at address: 10.49.196.170:54514...
+2026-01-17 13:10:08,691	INFO worker.py:1879 -- Connected to Ray cluster. View the dashboard at [1m[32mhttp://10.49.196.170:8265 [39m[22m
+2026-01-17 13:10:08,805	INFO worker.py:1694 -- Connecting to existing Ray cluster at address: 10.49.196.170:54514...
+2026-01-17 13:10:08,810	INFO worker.py:1879 -- Connected to Ray cluster. View the dashboard at [1m[32mhttp://10.49.196.170:8265 [39m[22m
+[2026-01-17 13:10:08,830 C 4144739 4144739] core_worker_process.cc:69:  Check failed: !core_worker_process The process is already initialized for core worker.
+*** StackTrace Information ***
+/usr/local/lib/python3.12/dist-packages/ray/_raylet.so(+0x14392da) [0x15540769b2da] ray::operator<<()
+/usr/local/lib/python3.12/dist-packages/ray/_raylet.so(_ZN3ray6RayLogD1Ev+0x479) [0x15540769dd59] ray::RayLog::~RayLog()
+/usr/local/lib/python3.12/dist-packages/ray/_raylet.so(_ZN3ray4core17CoreWorkerProcess10InitializeERKNS0_17CoreWorkerOptionsE+0xe8) [0x155406c0de48] ray::core::CoreWorkerProcess::Initialize()
+/usr/local/lib/python3.12/dist-packages/ray/_raylet.so(+0x81af6e) [0x155406a7cf6e] __pyx_pf_3ray_7_raylet_10CoreWorker___cinit__()
+/usr/local/lib/python3.12/dist-packages/ray/_raylet.so(+0x81c828) [0x155406a7e828] __pyx_pw_3ray_7_raylet_10CoreWorker_1__cinit__()
+/usr/local/lib/python3.12/dist-packages/ray/_raylet.so(+0x81d26c) [0x155406a7f26c] __pyx_tp_new_3ray_7_raylet_CoreWorker()
+python() [0x599ee7]
+python(_PyObject_MakeTpCall+0x75) [0x548ec5] _PyObject_MakeTpCall
+python(_PyEval_EvalFrameDefault+0xa89) [0x5d7819] _PyEval_EvalFrameDefault
+python(PyObject_CallOneArg+0x4d) [0x54a5ad] PyObject_CallOneArg
+python() [0x5a3c37]
+python(PyObject_CallFinalizerFromDealloc+0x4a) [0x585d4a] PyObject_CallFinalizerFromDealloc
+python() [0x59f729]
+python() [0x54c765]
+python() [0x5590a1]
+python() [0x610d65]
+python() [0x610d75]
+python() [0x610d75]
+python() [0x573836]
+python(PyDict_SetItemString+0x94) [0x574ca4] PyDict_SetItemString
+python() [0x6b8525]
+python() [0x6b1c82]
+python(Py_FinalizeEx+0xad) [0x6b136d] Py_FinalizeEx
+python(Py_RunMain+0x281) [0x6bcd61] Py_RunMain
+python(Py_BytesMain+0x2d) [0x6bc97d] Py_BytesMain
+/usr/lib/x86_64-linux-gnu/libc.so.6(+0x2a1ca) [0x1555551e71ca]
+/usr/lib/x86_64-linux-gnu/libc.so.6(__libc_start_main+0x8b) [0x1555551e728b] __libc_start_main
+python(_start+0x25) [0x6584a5] _start
+

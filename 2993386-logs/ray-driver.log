@@ -1,0 +1,50 @@
+============================================================
+ Testing New GRPOTrainer API 
+============================================================
+Max steps: 10
+GPUs per node: 8
+Num nodes: 1
+Prompts per step: 8
+Generations per prompt: 4
+============================================================
+Using local model: /lustre/fsw/portfolios/nvr/users/yidong/data/models/huggingface_hub/hub/models--deepseek-ai--DeepSeek-R1-Distill-Qwen-1.5B/snapshots/ad9f0ae0864d7fbcd1cd905e3c6c5b069cc8b562
+
+▶ Creating GRPOTrainer from pretrained model...
+
+✓ Trainer created: GRPOTrainer(model='/lustre/fsw/portfolios/nvr/users/yidong/data/models/huggingface_hub/hub/models--deepseek-ai--DeepSeek-R1-Distill-Qwen-1.5B/snapshots/ad9f0ae0864d7fbcd1cd905e3c6c5b069cc8b562', batch=8x4)
+  Effective batch size: 32
+
+▶ Starting training on DeepScaler dataset...
+2026-01-17 13:49:44,543	INFO worker.py:1723 -- Connecting to existing Ray cluster at address: 10.49.194.204:54514...
+2026-01-17 13:49:44,553	INFO worker.py:1908 -- Connected to Ray cluster. View the dashboard at [1m[32mhttp://10.49.194.204:8265 [39m[22m
+No chat template provided, using tokenizer's default
+
+▶ Setting up data...
+Loading agentica-org/DeepScaleR-Preview-Dataset for training and validation
+Generating train split:   0%|          | 0/40315 [00:00<?, ? examples/s]Generating train split: 100%|██████████| 40315/40315 [00:00<00:00, 120139.69 examples/s]Generating train split: 100%|██████████| 40315/40315 [00:00<00:00, 119043.45 examples/s]
+Generating train split:   0%|          | 0/30 [00:00<?, ? examples/s]Generating train split: 100%|██████████| 30/30 [00:00<00:00, 6469.03 examples/s]
+Map:   0%|          | 0/40315 [00:00<?, ? examples/s]Map:   4%|▍         | 1727/40315 [00:00<00:02, 17183.16 examples/s]Map:   9%|▊         | 3511/40315 [00:00<00:02, 17564.57 examples/s]Map:  13%|█▎        | 5340/40315 [00:00<00:01, 17888.50 examples/s]Map:  18%|█▊        | 7153/40315 [00:00<00:01, 17977.04 examples/s]Map:  22%|██▏       | 9000/40315 [00:00<00:01, 18074.05 examples/s]Map:  27%|██▋       | 10883/40315 [00:00<00:01, 18329.24 examples/s]Map:  34%|███▍      | 13612/40315 [00:00<00:01, 18268.86 examples/s]Map:  40%|████      | 16295/40315 [00:00<00:01, 18122.07 examples/s]Map:  45%|████▍     | 18117/40315 [00:01<00:01, 18145.35 examples/s]Map:  50%|████▉     | 19981/40315 [00:01<00:01, 18278.07 examples/s]Map:  56%|█████▋    | 22708/40315 [00:01<00:00, 18235.95 examples/s]Map:  63%|██████▎   | 25405/40315 [00:01<00:00, 18143.62 examples/s]Map:  70%|██████▉   | 28048/40315 [00:01<00:00, 17968.74 examples/s]Map:  74%|███████▍  | 29945/40315 [00:01<00:00, 18106.36 examples/s]Map:  81%|████████  | 32635/40315 [00:01<00:00, 18043.36 examples/s]Map:  88%|████████▊ | 35335/40315 [00:01<00:00, 18029.08 examples/s]Map:  94%|█████████▍| 38010/40315 [00:02<00:00, 17964.99 examples/s]Map:  99%|█████████▉| 39852/40315 [00:02<00:00, 18068.04 examples/s]Map: 100%|██████████| 40315/40315 [00:02<00:00, 18006.29 examples/s]
+Map:   0%|          | 0/30 [00:00<?, ? examples/s]Map: 100%|██████████| 30/30 [00:00<00:00, 3778.99 examples/s]
+Traceback (most recent call last):
+  File "/lustre/fs1/portfolios/nvr/projects/nvr_lpr_agentic/users/yidong/Projects/RL/examples/test_new_grpo_api.py", line 98, in <module>
+    sys.exit(main())
+             ^^^^^^
+  File "/lustre/fs1/portfolios/nvr/projects/nvr_lpr_agentic/users/yidong/Projects/RL/examples/test_new_grpo_api.py", line 84, in main
+    result = trainer.fit(dataset="DeepScaler")
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fsw/portfolios/nvr/users/yidong/Projects/RL/nemo_rl/algorithms/grpo/trainer.py", line 541, in fit
+    ) = setup(self.config, tokenizer, train_dataset, val_dataset)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fsw/portfolios/nvr/users/yidong/Projects/RL/nemo_rl/algorithms/grpo_legacy.py", line 231, in setup
+    logger = Logger(logger_config)
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fsw/portfolios/nvr/users/yidong/Projects/RL/nemo_rl/utils/logger.py", line 947, in __init__
+    cfg["tensorboard"], log_dir=tensorboard_log_dir
+    ~~~^^^^^^^^^^^^^^^
+KeyError: 'tensorboard'
+Exception ignored in: <function Logger.__del__ at 0x1551200b1940>
+Traceback (most recent call last):
+  File "/lustre/fsw/portfolios/nvr/users/yidong/Projects/RL/nemo_rl/utils/logger.py", line 1230, in __del__
+    if self.gpu_monitor:
+       ^^^^^^^^^^^^^^^^
+AttributeError: 'Logger' object has no attribute 'gpu_monitor'

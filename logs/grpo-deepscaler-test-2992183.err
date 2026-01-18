@@ -1,0 +1,15 @@
+++ date
++ echo 'Starting GRPO DeepScaler test at Sat Jan 17 11:24:25 AM PST 2026'
+++ hostname
++ echo 'Node: pool0-01669'
++ srun --container-image=/lustre/fsw/portfolios/nvr/users/yidong/data/models/images/nvidian+nemo+prorl_server_dev2.sqsh --container-mounts=/lustre:/lustre --container-workdir=/lustre/fsw/portfolios/nvr/users/yidong/Projects/RL bash -c '
+nvidia-smi
+cd /lustre/fsw/portfolios/nvr/users/yidong/Projects/RL
+export PYTHONPATH=/lustre/fsw/portfolios/nvr/users/yidong/Projects/RL:$PYTHONPATH
+python examples/run_grpo_math.py --config examples/configs/recipes/llm/grpo-deepseek-r1-distill-qwen-1.5b-deepscaler-test.yaml ++cluster.gpus_per_node=8
+'
+2026-01-17 11:25:23,389	INFO worker.py:1908 -- Started a local Ray instance. View the dashboard at [1m[32mhttp://127.0.0.1:8265 [39m[22m
+[2026-01-17 11:25:54,402 E 192755 192755] core_worker.cc:513: Failed to register worker to Raylet: IOError: [RayletClient] Unable to register worker with raylet. Failed to read data from the socket: End of file worker_id=01000000ffffffffffffffffffffffffffffffffffffffffffffffff
+srun: Job step aborted: Waiting up to 122 seconds for job step to finish.
+Jan 17 11:26:47.603744 192391 slurmstepd   0x1555338fa640: error: *** STEP 2992183.0 ON pool0-01669 CANCELLED AT 2026-01-17T11:26:47 ***
+Jan 17 11:26:47.612994 192363 slurmstepd   0x1555508f2640: error: *** JOB 2992183 ON pool0-01669 CANCELLED AT 2026-01-17T11:26:47 ***

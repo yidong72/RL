@@ -1,0 +1,30 @@
+++ date
++ echo 'Starting GRPO DeepScaler test at Sat Jan 17 11:21:04 AM PST 2026'
+++ hostname
++ echo 'Node: pool0-01432'
++ srun --container-image=/lustre/fsw/portfolios/nvr/users/yidong/data/models/images/nvidian+nemo+prorl_server_dev2.sqsh --container-mounts=/lustre:/lustre --container-workdir=/lustre/fsw/portfolios/nvr/users/yidong/Projects/RL bash -c '
+nvidia-smi
+cd /lustre/fsw/portfolios/nvr/users/yidong/Projects/RL
+export PYTHONPATH=/lustre/fsw/portfolios/nvr/users/yidong/Projects/RL:$PYTHONPATH
+python examples/run_grpo_math.py --config examples/configs/recipes/llm/grpo-deepseek-r1-distill-qwen-1.5b-deepscaler-test.yaml ++cluster.gpus_per_node=8
+'
+Traceback (most recent call last):
+  File "/lustre/fs1/portfolios/nvr/projects/nvr_lpr_agentic/users/yidong/Projects/RL/examples/run_grpo_math.py", line 24, in <module>
+    from nemo_rl.algorithms.grpo import MasterConfig, grpo_train, setup
+  File "<frozen importlib._bootstrap>", line 1412, in _handle_fromlist
+  File "/lustre/fsw/portfolios/nvr/users/yidong/Projects/RL/nemo_rl/algorithms/grpo/__init__.py", line 103, in __getattr__
+    from nemo_rl.algorithms.grpo_legacy import (
+  File "/lustre/fsw/portfolios/nvr/users/yidong/Projects/RL/nemo_rl/algorithms/grpo_legacy.py", line 31, in <module>
+    from nemo_rl.algorithms.loss_functions import (
+  File "/lustre/fsw/portfolios/nvr/users/yidong/Projects/RL/nemo_rl/algorithms/loss_functions.py", line 21, in <module>
+    from nemo_rl.algorithms.utils import calculate_kl, masked_mean
+  File "/lustre/fsw/portfolios/nvr/users/yidong/Projects/RL/nemo_rl/algorithms/utils.py", line 31, in <module>
+    from nemo_rl.utils.logger import Logger
+  File "/lustre/fsw/portfolios/nvr/users/yidong/Projects/RL/nemo_rl/utils/logger.py", line 905, in <module>
+    class Logger(LoggerInterface):
+  File "/lustre/fsw/portfolios/nvr/users/yidong/Projects/RL/nemo_rl/utils/logger.py", line 1005, in Logger
+    self, to_log: BatchedDataDict[Any] | dict[str, Any], filename: str
+                  ^^^^^^^^^^^^^^^
+NameError: name 'BatchedDataDict' is not defined
+srun: error: pool0-01432: task 0: Exited with exit code 1
+srun: Terminating StepId=2992181.0

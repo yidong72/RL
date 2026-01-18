@@ -1,0 +1,27 @@
+Metadata-Version: 2.4
+Name: nemo_gym
+Version: 0.0.0
+Summary: Standalone packaging for the Gym sub-module.
+Author: NVIDIA
+Author-email: NVIDIA <nemo-toolkit@nvidia.com>
+Requires-Python: >=3.10
+Requires-Dist: openai<=2.6.1
+Requires-Dist: tqdm
+Requires-Dist: pydantic
+Requires-Dist: pydantic_core
+Requires-Dist: devtools
+Requires-Dist: fastapi
+Requires-Dist: uvicorn
+Requires-Dist: uvloop
+Requires-Dist: hydra-core
+Requires-Dist: omegaconf
+Requires-Dist: gradio
+Requires-Dist: mlflow
+Requires-Dist: tdigest>=0.5.2.2
+Requires-Dist: aiohttp
+Requires-Dist: yappi
+Requires-Dist: ray[default]
+Requires-Dist: psutil
+Requires-Dist: datasets
+Dynamic: author
+Dynamic: requires-dist

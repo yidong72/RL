@@ -1,0 +1,5 @@
+INFO 01-17 12:16:46 [__init__.py:239] Automatically detected platform cuda.
+Ray: 2.46.0
+Torch: 2.6.0+cu124
+vLLM: 0.8.5
+CUDA: True

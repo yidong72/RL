@@ -1,0 +1,314 @@
+downloading uv 0.9.26 x86_64-unknown-linux-gnu
+no checksums to verify
+installing to /root/.local/bin
+  uv
+  uvx
+everything's installed!
+Loaded configuration from: examples/configs/recipes/llm/grpo-deepseek-r1-distill-qwen-1.5b-deepscaler-test.yaml
+Overrides: ['grpo.max_num_steps=10', 'grpo.num_prompts_per_step=8', 'grpo.num_generations_per_prompt=4', 'checkpointing.enabled=false', 'logger.log_dir=/lustre/fsw/portfolios/nvr/users/yidong/logs/grpo-legacy-test', 'cluster.gpus_per_node=8']
+Applied CLI overrides
+Final config:
+{'checkpointing': {'checkpoint_dir': 'results/grpo-deepseek-qwen-1.5b-deepscaler-test',
+                   'checkpoint_must_save_by': None,
+                   'enabled': False,
+                   'higher_is_better': True,
+                   'keep_top_k': 3,
+                   'metric_name': 'val:accuracy',
+                   'model_save_format': 'safetensors',
+                   'save_consolidated': False,
+                   'save_period': 5},
+ 'cluster': {'gpus_per_node': 8, 'num_nodes': 1},
+ 'data': {'dataset_name': 'DeepScaler',
+          'env_name': 'math',
+          'max_input_seq_length': 1024,
+          'num_workers': 1,
+          'processor': 'math_hf_data_processor',
+          'prompt_file': 'examples/prompts/cot.txt',
+          'shuffle': True,
+          'system_prompt_file': None},
+ 'env': {'math': {'math_verify_impl': 'hf_math_verify', 'num_workers': 8}},
+ 'grpo': {'async_grpo': {'enabled': False,
+                         'in_flight_weight_updates': False,
+                         'max_trajectory_age_steps': 1,
+                         'recompute_kv_cache_after_weight_updates': False},
+          'batch_multiplier': 1,
+          'dynamic_sampling_max_gen_batches': 10,
+          'max_num_epochs': 1,
+          'max_num_steps': 10,
+          'max_rollout_turns': 1,
+          'max_val_samples': 256,
+          'normalize_rewards': True,
+          'num_generations_per_prompt': 4,
+          'num_prompts_per_step': 8,
+          'overlong_filtering': False,
+          'reward_scaling': {'enabled': False,
+                             'source_max': 1.0,
+                             'source_min': 0.0,
+                             'target_max': 1.0,
+                             'target_min': 0.0},
+          'reward_shaping': {'enabled': False,
+                             'max_response_length': 2048,
+                             'overlong_buffer_length': 128,
+                             'overlong_buffer_penalty': 1},
+          'seed': 42,
+          'use_dynamic_sampling': False,
+          'use_leave_one_out_baseline': True,
+          'val_at_start': False,
+          'val_batch_size': 256,
+          'val_period': 5},
+ 'logger': {'gpu_monitoring': {'collection_interval': 10, 'flush_interval': 10},
+            'log_dir': '/lustre/fsw/portfolios/nvr/users/yidong/logs/grpo-legacy-test',
+            'mlflow': {'experiment_name': 'grpo-dev',
+                       'run_name': 'grpo-dev-logger'},
+            'mlflow_enabled': False,
+            'monitor_gpus': True,
+            'num_val_samples_to_print': 0,
+            'swanlab': {'name': 'grpo-dev-logger', 'project': 'grpo-dev'},
+            'swanlab_enabled': False,
+            'tensorboard': {},
+            'tensorboard_enabled': True,
+            'wandb': {'name': 'grpo-dev-logger', 'project': 'grpo-dev'},
+            'wandb_enabled': False},
+ 'loss_fn': {'force_on_policy_ratio': False,
+             'kl_input_clamp_value': 20.0,
+             'kl_output_clamp_value': 10.0,
+             'ratio_clip_c': None,
+             'ratio_clip_max': 0.2,
+             'ratio_clip_min': 0.2,
+             'reference_policy_kl_penalty': 0.01,
+             'reference_policy_kl_type': 'k3',
+             'sequence_level_importance_ratios': False,
+             'token_level_loss': True,
+             'truncated_importance_sampling_ratio': None,
+             'use_importance_sampling_correction': False,
+             'use_on_policy_kl_approximation': False},
+ 'policy': {'dtensor_cfg': {'_v2': True,
+                            'activation_checkpointing': False,
+                            'context_parallel_size': 1,
+                            'cpu_offload': False,
+                            'custom_parallel_plan': None,
+                            'enabled': True,
+                            'sequence_parallel': False,
+                            'tensor_parallel_size': 1},
+            'dynamic_batching': {'enabled': False,
+                                 'logprob_mb_tokens': 8192,
+                                 'sequence_length_round': 64,
+                                 'train_mb_tokens': 4096},
+            'generation': {'backend': 'vllm',
+                           'colocated': {'enabled': True,
+                                         'resources': {'gpus_per_node': None,
+                                                       'num_nodes': None}},
+                           'max_new_tokens': 1024,
+                           'mcore_generation_config': {'block_size_tokens': 256,
+                                                       'buffer_guaranteed_fraction': 0.1,
+                                                       'buffer_size_gb': 20,
+                                                       'enable_chunked_prefill': True,
+                                                       'max_tokens': 16384,
+                                                       'num_cuda_graphs': 16,
+                                                       'unified_memory_level': 0,
+                                                       'use_cuda_graphs_for_non_decode_steps': True},
+                           'stop_strings': None,
+                           'stop_token_ids': None,
+                           'temperature': 1.0,
+                           'top_k': None,
+                           'top_p': 1.0,
+                           'vllm_cfg': {'async_engine': False,
+                                        'enable_vllm_metrics_logger': True,
+                                        'enforce_eager': False,
+                                        'expert_parallel_size': 1,
+                                        'gpu_memory_utilization': 0.7,
+                                        'kv_cache_dtype': 'auto',
+                                        'max_model_len': 2048,
+                                        'num_first_layers_in_bf16': 0,
+                                        'num_last_layers_in_bf16': 0,
+                                        'pipeline_parallel_size': 1,
+                                        'precision': 'bfloat16',
+                                        'tensor_parallel_size': 1,
+                                        'use_deep_gemm': False,
+                                        'vllm_metrics_logger_interval': 0.5},
+                           'vllm_kwargs': {}},
+            'generation_batch_size': 32,
+            'hf_config_overrides': {},
+            'logprob_batch_size': 4,
+            'logprob_chunk_size': None,
+            'make_sequence_length_divisible_by': 1,
+            'max_grad_norm': 1.0,
+            'max_total_sequence_length': 2048,
+            'megatron_cfg': {'activation_checkpointing': False,
+                             'apply_rope_fusion': True,
+                             'bias_activation_fusion': True,
+                             'context_parallel_size': 1,
+                             'converter_type': 'Qwen2ForCausalLM',
+                             'defer_fp32_logits': False,
+                             'distributed_data_parallel_config': {'data_parallel_sharding_strategy': 'optim_grads_params',
+                                                                  'grad_reduce_in_fp32': False,
+                                                                  'overlap_grad_reduce': True,
+                                                                  'overlap_param_gather': True,
+                                                                  'use_custom_fsdp': False},
+                             'empty_unused_memory_level': 1,
+                             'enabled': False,
+                             'env_vars': None,
+                             'expert_model_parallel_size': 1,
+                             'expert_tensor_parallel_size': 1,
+2026-01-17 12:44:19,566	INFO worker.py:1694 -- Connecting to existing Ray cluster at address: 10.49.193.27:54514...
+2026-01-17 12:44:19,575	INFO worker.py:1879 -- Connected to Ray cluster. View the dashboard at [1m[32mhttp://10.49.193.27:8265 [39m[22m
+                             'fp8_cfg': None,
+                             'freeze_moe_router': True,
+                             'moe_per_layer_logging': False,
+                             'moe_permute_fusion': False,
+                             'moe_router_bias_update_rate': 0.0,
+                             'moe_router_dtype': 'fp64',
+                             'moe_router_load_balancing_type': 'none',
+                             'num_layers_in_first_pipeline_stage': None,
+                             'num_layers_in_last_pipeline_stage': None,
+                             'optimizer': {'adam_beta1': 0.9,
+                                           'adam_beta2': 0.999,
+                                           'adam_eps': 1e-08,
+                                           'bf16': True,
+                                           'clip_grad': 1.0,
+                                           'fp16': False,
+                                           'lr': 5e-06,
+                                           'min_lr': 5e-07,
+                                           'optimizer': 'adam',
+                                           'optimizer_cpu_offload': False,
+                                           'optimizer_offload_fraction': 0.0,
+                                           'params_dtype': 'float32',
+                                           'sgd_momentum': 0.9,
+                                           'use_distributed_optimizer': True,
+                                           'use_precision_aware_optimizer': True,
+                                           'weight_decay': 0.01},
+                             'pipeline_dtype': 'bfloat16',
+                             'pipeline_model_parallel_size': 1,
+                             'scheduler': {'end_weight_decay': 0.01,
+                                           'lr_decay_iters': 1000,
+                                           'lr_decay_style': 'constant',
+                                           'lr_warmup_init': 5e-07,
+                                           'lr_warmup_iters': 13,
+                                           'start_weight_decay': 0.01,
+                                           'weight_decay_incr_style': 'constant'},
+                             'sequence_parallel': False,
+                             'tensor_model_parallel_size': 1},
+            'model_name': 'deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B',
+            'offload_optimizer_for_logprob': False,
+            'optimizer': {'kwargs': {'betas': [0.9, 0.999],
+                                     'eps': 1e-08,
+                                     'foreach': False,
+                                     'fused': False,
+                                     'lr': 5e-06,
+                                     'weight_decay': 0.01},
+                          'name': 'torch.optim.AdamW'},
+            'precision': 'bfloat16',
+            'scheduler': [{'kwargs': {'end_factor': 1.0,
+                                      'start_factor': 0.1,
+                                      'total_iters': 50},
+                           'name': 'torch.optim.lr_scheduler.LinearLR'},
+                          {'kwargs': {'factor': 1.0,
+                                      'total_iters': 10000000000},
+                           'name': 'torch.optim.lr_scheduler.ConstantLR'},
+                          {'milestones': [50]}],
+            'sequence_packing': {'algorithm': 'modified_first_fit_decreasing',
+                                 'enabled': True,
+                                 'logprob_mb_tokens': 8192,
+                                 'sequence_length_round': 64,
+                                 'train_mb_tokens': 4096},
+            'tokenizer': {'chat_template_kwargs': None,
+                          'name': 'deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B'},
+            'train_global_batch_size': 32,
+            'train_micro_batch_size': 2}}
+📊 Using log directory: /lustre/fsw/portfolios/nvr/users/yidong/logs/grpo-legacy-test/exp_006
+No chat template provided, using tokenizer's default
+
+▶ Setting up data...
+Loading agentica-org/DeepScaleR-Preview-Dataset for training and validation
+Initialized TensorboardLogger at /lustre/fsw/portfolios/nvr/users/yidong/logs/grpo-legacy-test/exp_006/tensorboard
+GPU monitoring started with collection interval=10s, flush interval=10s
+  ✓ Training dataloader loaded with 40315 samples
+  ✓ Validation dataloader loaded with 480 samples
+
+▶ Setting up compute cluster...
+  ✓ Ray cluster for policy initialized with 1 nodes
+
+▶ Setting up model and training...
+  ⚙️  Using sequential worker initialization (colocated mode)
+Initializing vllm_policy workers:   0%|          | 0/8 [00:00<?, ?worker/s][33m(raylet)[0m Traceback (most recent call last):
+[33m(raylet)[0m   File "/usr/local/lib/python3.12/dist-packages/ray/_private/workers/default_worker.py", line 8, in <module>
+[33m(raylet)[0m     import ray
+[33m(raylet)[0m ModuleNotFoundError: No module named 'ray'
+[33m(raylet)[0m [2026-01-17 12:45:34,686 E 4077834 4077834] (raylet) worker_pool.cc:586: Some workers of the worker process(4105627) have not registered within the timeout. The process is dead, probably it crashed during start.
+[33m(raylet)[0m Traceback (most recent call last):[32m [repeated 7x across cluster] (Ray deduplicates logs by default. Set RAY_DEDUP_LOGS=0 to disable log deduplication, or see https://docs.ray.io/en/master/ray-observability/user-guides/configure-logging.html#log-deduplication for more options.)[0m
+[33m(raylet)[0m   File "/usr/local/lib/python3.12/dist-packages/ray/_private/workers/default_worker.py", line 8, in <module>[32m [repeated 7x across cluster][0m
+[33m(raylet)[0m     import ray[32m [repeated 7x across cluster][0m
+[33m(raylet)[0m ModuleNotFoundError: No module named 'ray'[32m [repeated 7x across cluster][0m
+[33m(raylet)[0m [2026-01-17 12:46:34,705 E 4077834 4077834] (raylet) worker_pool.cc:586: Some workers of the worker process(4107793) have not registered within the timeout. The process is dead, probably it crashed during start.[32m [repeated 8x across cluster][0m
+[33m(raylet)[0m Traceback (most recent call last):[32m [repeated 8x across cluster][0m
+[33m(raylet)[0m   File "/usr/local/lib/python3.12/dist-packages/ray/_private/workers/default_worker.py", line 8, in <module>[32m [repeated 8x across cluster][0m
+[33m(raylet)[0m     import ray[32m [repeated 8x across cluster][0m
+[33m(raylet)[0m ModuleNotFoundError: No module named 'ray'[32m [repeated 8x across cluster][0m
+[33m(raylet)[0m [2026-01-17 12:47:34,750 E 4077834 4077834] (raylet) worker_pool.cc:586: Some workers of the worker process(4108608) have not registered within the timeout. The process is dead, probably it crashed during start.[32m [repeated 11x across cluster][0m
+[33m(raylet)[0m Traceback (most recent call last):[32m [repeated 8x across cluster][0m
+[33m(raylet)[0m   File "/usr/local/lib/python3.12/dist-packages/ray/_private/workers/default_worker.py", line 8, in <module>[32m [repeated 8x across cluster][0m
+[33m(raylet)[0m     import ray[32m [repeated 8x across cluster][0m
+[33m(raylet)[0m ModuleNotFoundError: No module named 'ray'[32m [repeated 8x across cluster][0m
+Jan 17 12:48:13.14052  4078828 slurmstepd   0x15554b7f9640: error: *** STEP 2992635.8 ON pool0-03165 CANCELLED AT 2026-01-17T12:48:13 ***
+*** SIGTERM received at time=1768682893 on cpu 180 ***
+PC: @     0x155555255d61  (unknown)  (unknown)
+    @     0x155555202320  (unknown)  (unknown)
+    @     0x155555258c7e        224  pthread_cond_timedwait
+    @     0x155406c9829f       1184  ray::core::GetRequest::Wait()
+    @     0x155406c9ad67       1424  ray::core::CoreWorkerMemoryStore::GetImpl()
+    @     0x155406c9bfe7       1360  ray::core::CoreWorkerMemoryStore::Wait()
+    @     0x155406bb7a10       1776  ray::core::CoreWorker::Wait()
+    @     0x155406ab3460        352  __pyx_pw_3ray_7_raylet_10CoreWorker_61wait()
+    @           0x5498c5         32  PyObject_Vectorcall
+    @           0x5d7819        384  _PyEval_EvalFrameDefault
+    @           0x54a7da        176  _PyObject_Call_Prepend
+    @           0x59e4cf        112  (unknown)
+    @           0x599f23         48  (unknown)
+    @           0x548f8e         80  _PyObject_MakeTpCall
+    @           0x5d7819        384  _PyEval_EvalFrameDefault
+    @           0x54a7da        176  _PyObject_Call_Prepend
+    @           0x59e4cf        112  (unknown)
+    @           0x599f23         48  (unknown)
+    @           0x548f8e         80  _PyObject_MakeTpCall
+    @           0x5d7819        384  _PyEval_EvalFrameDefault
+    @           0x5d5d2b        128  PyEval_EvalCode
+    @           0x608e12         48  (unknown)
+    @           0x6b5253         80  (unknown)
+    @           0x6b4fba        128  _PyRun_SimpleFileObject
+    @           0x6b4def         64  _PyRun_AnyFileObject
+    @           0x6bce95        288  Py_RunMain
+    @           0x6bc97d         48  Py_BytesMain
+    @     0x1555551e71ca        160  (unknown)
+    @     0x1555551e728b         96  __libc_start_main
+    @           0x6584a5  (unknown)  _start
+[2026-01-17 12:48:13,023 E 4078935 4078935] logging.cc:496: *** SIGTERM received at time=1768682893 on cpu 180 ***
+[2026-01-17 12:48:13,023 E 4078935 4078935] logging.cc:496: PC: @     0x155555255d61  (unknown)  (unknown)
+[2026-01-17 12:48:13,023 E 4078935 4078935] logging.cc:496:     @     0x155555202320  (unknown)  (unknown)
+[2026-01-17 12:48:13,023 E 4078935 4078935] logging.cc:496:     @     0x155555258c7e        224  pthread_cond_timedwait
+[2026-01-17 12:48:13,023 E 4078935 4078935] logging.cc:496:     @     0x155406c9829f       1184  ray::core::GetRequest::Wait()
+[2026-01-17 12:48:13,023 E 4078935 4078935] logging.cc:496:     @     0x155406c9ad67       1424  ray::core::CoreWorkerMemoryStore::GetImpl()
+[2026-01-17 12:48:13,023 E 4078935 4078935] logging.cc:496:     @     0x155406c9bfe7       1360  ray::core::CoreWorkerMemoryStore::Wait()
+[2026-01-17 12:48:13,023 E 4078935 4078935] logging.cc:496:     @     0x155406bb7a10       1776  ray::core::CoreWorker::Wait()
+[2026-01-17 12:48:13,023 E 4078935 4078935] logging.cc:496:     @     0x155406ab3460        352  __pyx_pw_3ray_7_raylet_10CoreWorker_61wait()
+[2026-01-17 12:48:13,023 E 4078935 4078935] logging.cc:496:     @           0x5498c5         32  PyObject_Vectorcall
+[2026-01-17 12:48:13,023 E 4078935 4078935] logging.cc:496:     @           0x5d7819        384  _PyEval_EvalFrameDefault
+[2026-01-17 12:48:13,023 E 4078935 4078935] logging.cc:496:     @           0x54a7da        176  _PyObject_Call_Prepend
+[2026-01-17 12:48:13,023 E 4078935 4078935] logging.cc:496:     @           0x59e4cf        112  (unknown)
+[2026-01-17 12:48:13,023 E 4078935 4078935] logging.cc:496:     @           0x599f23         48  (unknown)
+[2026-01-17 12:48:13,023 E 4078935 4078935] logging.cc:496:     @           0x548f8e         80  _PyObject_MakeTpCall
+[2026-01-17 12:48:13,023 E 4078935 4078935] logging.cc:496:     @           0x5d7819        384  _PyEval_EvalFrameDefault
+[2026-01-17 12:48:13,023 E 4078935 4078935] logging.cc:496:     @           0x54a7da        176  _PyObject_Call_Prepend
+[2026-01-17 12:48:13,023 E 4078935 4078935] logging.cc:496:     @           0x59e4cf        112  (unknown)
+[2026-01-17 12:48:13,023 E 4078935 4078935] logging.cc:496:     @           0x599f23         48  (unknown)
+[2026-01-17 12:48:13,023 E 4078935 4078935] logging.cc:496:     @           0x548f8e         80  _PyObject_MakeTpCall
+[2026-01-17 12:48:13,023 E 4078935 4078935] logging.cc:496:     @           0x5d7819        384  _PyEval_EvalFrameDefault
+[2026-01-17 12:48:13,023 E 4078935 4078935] logging.cc:496:     @           0x5d5d2b        128  PyEval_EvalCode
+[2026-01-17 12:48:13,023 E 4078935 4078935] logging.cc:496:     @           0x608e12         48  (unknown)
+[2026-01-17 12:48:13,023 E 4078935 4078935] logging.cc:496:     @           0x6b5253         80  (unknown)
+[2026-01-17 12:48:13,023 E 4078935 4078935] logging.cc:496:     @           0x6b4fba        128  _PyRun_SimpleFileObject
+[2026-01-17 12:48:13,023 E 4078935 4078935] logging.cc:496:     @           0x6b4def         64  _PyRun_AnyFileObject
+[2026-01-17 12:48:13,023 E 4078935 4078935] logging.cc:496:     @           0x6bce95        288  Py_RunMain
+[2026-01-17 12:48:13,023 E 4078935 4078935] logging.cc:496:     @           0x6bc97d         48  Py_BytesMain
+[2026-01-17 12:48:13,023 E 4078935 4078935] logging.cc:496:     @     0x1555551e71ca        160  (unknown)
+[2026-01-17 12:48:13,023 E 4078935 4078935] logging.cc:496:     @     0x1555551e728b         96  __libc_start_main
+[2026-01-17 12:48:13,023 E 4078935 4078935] logging.cc:496:     @           0x6584a5  (unknown)  _start

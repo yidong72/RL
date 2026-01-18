@@ -1,0 +1,54 @@
+============================================================
+ Testing New GRPOTrainer API 
+============================================================
+Max steps: 10
+GPUs per node: 8
+Num nodes: 1
+Prompts per step: 8
+Generations per prompt: 4
+============================================================
+Using local model: /lustre/fsw/portfolios/nvr/users/yidong/data/models/huggingface_hub/hub/models--deepseek-ai--DeepSeek-R1-Distill-Qwen-1.5B/snapshots/ad9f0ae0864d7fbcd1cd905e3c6c5b069cc8b562
+
+▶ Creating GRPOTrainer from pretrained model...
+
+✓ Trainer created: GRPOTrainer(model='/lustre/fsw/portfolios/nvr/users/yidong/data/models/huggingface_hub/hub/models--deepseek-ai--DeepSeek-R1-Distill-Qwen-1.5B/snapshots/ad9f0ae0864d7fbcd1cd905e3c6c5b069cc8b562', batch=8x4)
+  Effective batch size: 32
+
+▶ Starting training on DeepScaler dataset...
+2026-01-17 14:02:27,351	INFO worker.py:1723 -- Connecting to existing Ray cluster at address: 10.49.193.238:54514...
+2026-01-17 14:02:27,362	INFO worker.py:1908 -- Connected to Ray cluster. View the dashboard at [1m[32mhttp://10.49.193.238:8265 [39m[22m
+No chat template provided, using tokenizer's default
+
+▶ Setting up data...
+Loading agentica-org/DeepScaleR-Preview-Dataset for training and validation
+Initialized TensorboardLogger at /lustre/fsw/portfolios/nvr/users/yidong/logs/grpo-new-api-test/exp_010/tensorboard
+GPU monitoring started with collection interval=10.0s, flush interval=10.0s
+  ✓ Training dataloader loaded with 40315 samples
+  ✓ Validation dataloader loaded with 480 samples
+
+▶ Setting up compute cluster...
+  ✓ Ray cluster for policy initialized with 1 nodes
+
+▶ Setting up model and training...
+  ⚙️  Using sequential worker initialization (colocated mode)
+Traceback (most recent call last):
+  File "/lustre/fs1/portfolios/nvr/projects/nvr_lpr_agentic/users/yidong/Projects/RL/examples/test_new_grpo_api.py", line 98, in <module>
+    sys.exit(main())
+             ^^^^^^
+  File "/lustre/fs1/portfolios/nvr/projects/nvr_lpr_agentic/users/yidong/Projects/RL/examples/test_new_grpo_api.py", line 84, in main
+    result = trainer.fit(dataset="DeepScaler")
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fsw/portfolios/nvr/users/yidong/Projects/RL/nemo_rl/algorithms/grpo/trainer.py", line 548, in fit
+    ) = setup(self.config, tokenizer, train_dataset, val_dataset)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fsw/portfolios/nvr/users/yidong/Projects/RL/nemo_rl/algorithms/grpo_legacy.py", line 559, in setup
+    policy_generation, vllm_time = init_vllm()
+                                   ^^^^^^^^^^^
+  File "/lustre/fsw/portfolios/nvr/users/yidong/Projects/RL/nemo_rl/algorithms/grpo_legacy.py", line 481, in init_vllm
+    pg = VllmGeneration(cluster=inference_cluster, config=generation_config)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fsw/portfolios/nvr/users/yidong/Projects/RL/nemo_rl/models/generation/vllm/vllm_generation.py", line 59, in __init__
+    self.pp_size = self.cfg["vllm_cfg"]["pipeline_parallel_size"]
+                   ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+KeyError: 'pipeline_parallel_size'
+Error during policy shutdown: 'VllmGeneration' object has no attribute 'worker_group'

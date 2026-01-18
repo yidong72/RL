@@ -1,0 +1,33 @@
+============================================================
+ Testing New GRPOTrainer API 
+============================================================
+Max steps: 10
+GPUs per node: 8
+Num nodes: 1
+Prompts per step: 8
+Generations per prompt: 4
+============================================================
+
+▶ Creating GRPOTrainer from pretrained model...
+
+✓ Trainer created: GRPOTrainer(model='deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B', batch=8x4)
+  Effective batch size: 32
+
+▶ Starting training on DeepScaler dataset...
+2026-01-17 13:42:06,469	INFO worker.py:1723 -- Connecting to existing Ray cluster at address: 10.49.193.215:54514...
+2026-01-17 13:42:06,479	INFO worker.py:1908 -- Connected to Ray cluster. View the dashboard at [1m[32mhttp://10.49.193.215:8265 [39m[22m
+No chat template provided, using tokenizer's default
+Traceback (most recent call last):
+  File "/lustre/fs1/portfolios/nvr/projects/nvr_lpr_agentic/users/yidong/Projects/RL/examples/test_new_grpo_api.py", line 88, in <module>
+    sys.exit(main())
+             ^^^^^^
+  File "/lustre/fs1/portfolios/nvr/projects/nvr_lpr_agentic/users/yidong/Projects/RL/examples/test_new_grpo_api.py", line 74, in main
+    result = trainer.fit(dataset="DeepScaler")
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fsw/portfolios/nvr/users/yidong/Projects/RL/nemo_rl/algorithms/grpo/trainer.py", line 467, in fit
+    self.config["policy"]["generation"] = configure_generation_config(
+                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fsw/portfolios/nvr/users/yidong/Projects/RL/nemo_rl/models/generation/__init__.py", line 37, in configure_generation_config
+    if config["stop_token_ids"] is None:
+       ~~~~~~^^^^^^^^^^^^^^^^^^
+KeyError: 'stop_token_ids'

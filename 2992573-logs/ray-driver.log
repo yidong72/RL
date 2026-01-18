@@ -1,0 +1,276 @@
+Loaded configuration from: examples/configs/recipes/llm/grpo-deepseek-r1-distill-qwen-1.5b-deepscaler-test.yaml
+Overrides: ['grpo.max_num_steps=10', 'grpo.num_prompts_per_step=8', 'grpo.num_generations_per_prompt=4', 'checkpointing.enabled=false', 'logger.log_dir=/lustre/fsw/portfolios/nvr/users/yidong/logs/grpo-legacy-test', 'cluster.gpus_per_node=8']
+Applied CLI overrides
+Final config:
+{'checkpointing': {'checkpoint_dir': 'results/grpo-deepseek-qwen-1.5b-deepscaler-test',
+                   'checkpoint_must_save_by': None,
+                   'enabled': False,
+                   'higher_is_better': True,
+                   'keep_top_k': 3,
+                   'metric_name': 'val:accuracy',
+                   'model_save_format': 'safetensors',
+                   'save_consolidated': False,
+                   'save_period': 5},
+ 'cluster': {'gpus_per_node': 8, 'num_nodes': 1},
+ 'data': {'dataset_name': 'DeepScaler',
+          'env_name': 'math',
+          'max_input_seq_length': 1024,
+          'num_workers': 1,
+          'processor': 'math_hf_data_processor',
+          'prompt_file': 'examples/prompts/cot.txt',
+          'shuffle': True,
+          'system_prompt_file': None},
+ 'env': {'math': {'math_verify_impl': 'hf_math_verify', 'num_workers': 8}},
+ 'grpo': {'async_grpo': {'enabled': False,
+                         'in_flight_weight_updates': False,
+                         'max_trajectory_age_steps': 1,
+                         'recompute_kv_cache_after_weight_updates': False},
+          'batch_multiplier': 1,
+          'dynamic_sampling_max_gen_batches': 10,
+          'max_num_epochs': 1,
+          'max_num_steps': 10,
+          'max_rollout_turns': 1,
+          'max_val_samples': 256,
+          'normalize_rewards': True,
+          'num_generations_per_prompt': 4,
+          'num_prompts_per_step': 8,
+          'overlong_filtering': False,
+          'reward_scaling': {'enabled': False,
+                             'source_max': 1.0,
+                             'source_min': 0.0,
+                             'target_max': 1.0,
+                             'target_min': 0.0},
+          'reward_shaping': {'enabled': False,
+                             'max_response_length': 2048,
+                             'overlong_buffer_length': 128,
+                             'overlong_buffer_penalty': 1},
+          'seed': 42,
+          'use_dynamic_sampling': False,
+          'use_leave_one_out_baseline': True,
+          'val_at_start': False,
+          'val_batch_size': 256,
+          'val_period': 5},
+ 'logger': {'gpu_monitoring': {'collection_interval': 10, 'flush_interval': 10},
+            'log_dir': '/lustre/fsw/portfolios/nvr/users/yidong/logs/grpo-legacy-test',
+            'mlflow': {'experiment_name': 'grpo-dev',
+                       'run_name': 'grpo-dev-logger'},
+            'mlflow_enabled': False,
+            'monitor_gpus': True,
+            'num_val_samples_to_print': 0,
+            'swanlab': {'name': 'grpo-dev-logger', 'project': 'grpo-dev'},
+            'swanlab_enabled': False,
+            'tensorboard': {},
+            'tensorboard_enabled': True,
+            'wandb': {'name': 'grpo-dev-logger', 'project': 'grpo-dev'},
+            'wandb_enabled': False},
+ 'loss_fn': {'force_on_policy_ratio': False,
+             'kl_input_clamp_value': 20.0,
+             'kl_output_clamp_value': 10.0,
+             'ratio_clip_c': None,
+             'ratio_clip_max': 0.2,
+             'ratio_clip_min': 0.2,
+             'reference_policy_kl_penalty': 0.01,
+             'reference_policy_kl_type': 'k3',
+             'sequence_level_importance_ratios': False,
+             'token_level_loss': True,
+             'truncated_importance_sampling_ratio': None,
+             'use_importance_sampling_correction': False,
+             'use_on_policy_kl_approximation': False},
+ 'policy': {'dtensor_cfg': {'_v2': True,
+                            'activation_checkpointing': False,
+                            'context_parallel_size': 1,
+                            'cpu_offload': False,
+                            'custom_parallel_plan': None,
+                            'enabled': True,
+                            'sequence_parallel': False,
+                            'tensor_parallel_size': 1},
+            'dynamic_batching': {'enabled': False,
+                                 'logprob_mb_tokens': 8192,
+                                 'sequence_length_round': 64,
+                                 'train_mb_tokens': 4096},
+            'generation': {'backend': 'vllm',
+                           'colocated': {'enabled': True,
+                                         'resources': {'gpus_per_node': None,
+                                                       'num_nodes': None}},
+                           'max_new_tokens': 1024,
+                           'mcore_generation_config': {'block_size_tokens': 256,
+                                                       'buffer_guaranteed_fraction': 0.1,
+                                                       'buffer_size_gb': 20,
+                                                       'enable_chunked_prefill': True,
+                                                       'max_tokens': 16384,
+                                                       'num_cuda_graphs': 16,
+                                                       'unified_memory_level': 0,
+                                                       'use_cuda_graphs_for_non_decode_steps': True},
+                           'stop_strings': None,
+                           'stop_token_ids': None,
+                           'temperature': 1.0,
+                           'top_k': None,
+                           'top_p': 1.0,
+                           'vllm_cfg': {'async_engine': False,
+                                        'enable_vllm_metrics_logger': True,
+                                        'enforce_eager': False,
+                                        'expert_parallel_size': 1,
+                                        'gpu_memory_utilization': 0.7,
+                                        'kv_cache_dtype': 'auto',
+                                        'max_model_len': 2048,
+                                        'num_first_layers_in_bf16': 0,
+                                        'num_last_layers_in_bf16': 0,
+                                        'pipeline_parallel_size': 1,
+                                        'precision': 'bfloat16',
+                                        'tensor_parallel_size': 1,
+                                        'use_deep_gemm': False,
+                                        'vllm_metrics_logger_interval': 0.5},
+                           'vllm_kwargs': {}},
+            'generation_batch_size': 32,
+            'hf_config_overrides': {},
+            'logprob_batch_size': 4,
+            'logprob_chunk_size': None,
+            'make_sequence_length_divisible_by': 1,
+            'max_grad_norm': 1.0,
+            'max_total_sequence_length': 2048,
+            'megatron_cfg': {'activation_checkpointing': False,
+                             'apply_rope_fusion': True,
+                             'bias_activation_fusion': True,
+                             'context_parallel_size': 1,
+                             'converter_type': 'Qwen2ForCausalLM',
+                             'defer_fp32_logits': False,
+                             'distributed_data_parallel_config': {'data_parallel_sharding_strategy': 'optim_grads_params',
+                                                                  'grad_reduce_in_fp32': False,
+                                                                  'overlap_grad_reduce': True,
+                                                                  'overlap_param_gather': True,
+                                                                  'use_custom_fsdp': False},
+                             'empty_unused_memory_level': 1,
+                             'enabled': False,
+                             'env_vars': None,
+                             'expert_model_parallel_size': 1,
+                             'expert_tensor_parallel_size': 1,
+2026-01-17 12:34:02,953	INFO worker.py:1694 -- Connecting to existing Ray cluster at address: 10.49.195.96:54514...
+2026-01-17 12:34:02,962	INFO worker.py:1879 -- Connected to Ray cluster. View the dashboard at [1m[32mhttp://10.49.195.96:8265 [39m[22m
+                             'fp8_cfg': None,
+                             'freeze_moe_router': True,
+                             'moe_per_layer_logging': False,
+                             'moe_permute_fusion': False,
+                             'moe_router_bias_update_rate': 0.0,
+                             'moe_router_dtype': 'fp64',
+                             'moe_router_load_balancing_type': 'none',
+                             'num_layers_in_first_pipeline_stage': None,
+                             'num_layers_in_last_pipeline_stage': None,
+                             'optimizer': {'adam_beta1': 0.9,
+                                           'adam_beta2': 0.999,
+                                           'adam_eps': 1e-08,
+                                           'bf16': True,
+                                           'clip_grad': 1.0,
+                                           'fp16': False,
+                                           'lr': 5e-06,
+                                           'min_lr': 5e-07,
+                                           'optimizer': 'adam',
+                                           'optimizer_cpu_offload': False,
+                                           'optimizer_offload_fraction': 0.0,
+                                           'params_dtype': 'float32',
+                                           'sgd_momentum': 0.9,
+                                           'use_distributed_optimizer': True,
+                                           'use_precision_aware_optimizer': True,
+                                           'weight_decay': 0.01},
+                             'pipeline_dtype': 'bfloat16',
+                             'pipeline_model_parallel_size': 1,
+                             'scheduler': {'end_weight_decay': 0.01,
+                                           'lr_decay_iters': 1000,
+                                           'lr_decay_style': 'constant',
+                                           'lr_warmup_init': 5e-07,
+                                           'lr_warmup_iters': 13,
+                                           'start_weight_decay': 0.01,
+                                           'weight_decay_incr_style': 'constant'},
+                             'sequence_parallel': False,
+                             'tensor_model_parallel_size': 1},
+            'model_name': 'deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B',
+            'offload_optimizer_for_logprob': False,
+            'optimizer': {'kwargs': {'betas': [0.9, 0.999],
+                                     'eps': 1e-08,
+                                     'foreach': False,
+                                     'fused': False,
+                                     'lr': 5e-06,
+                                     'weight_decay': 0.01},
+                          'name': 'torch.optim.AdamW'},
+            'precision': 'bfloat16',
+            'scheduler': [{'kwargs': {'end_factor': 1.0,
+                                      'start_factor': 0.1,
+                                      'total_iters': 50},
+                           'name': 'torch.optim.lr_scheduler.LinearLR'},
+                          {'kwargs': {'factor': 1.0,
+                                      'total_iters': 10000000000},
+                           'name': 'torch.optim.lr_scheduler.ConstantLR'},
+                          {'milestones': [50]}],
+            'sequence_packing': {'algorithm': 'modified_first_fit_decreasing',
+                                 'enabled': True,
+                                 'logprob_mb_tokens': 8192,
+                                 'sequence_length_round': 64,
+                                 'train_mb_tokens': 4096},
+            'tokenizer': {'chat_template_kwargs': None,
+                          'name': 'deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B'},
+            'train_global_batch_size': 32,
+            'train_micro_batch_size': 2}}
+📊 Using log directory: /lustre/fsw/portfolios/nvr/users/yidong/logs/grpo-legacy-test/exp_004
+No chat template provided, using tokenizer's default
+
+▶ Setting up data...
+Loading agentica-org/DeepScaleR-Preview-Dataset for training and validation
+Initialized TensorboardLogger at /lustre/fsw/portfolios/nvr/users/yidong/logs/grpo-legacy-test/exp_004/tensorboard
+GPU monitoring started with collection interval=10s, flush interval=10s
+  ✓ Training dataloader loaded with 40315 samples
+  ✓ Validation dataloader loaded with 480 samples
+
+▶ Setting up compute cluster...
+  ✓ Ray cluster for policy initialized with 1 nodes
+
+▶ Setting up model and training...
+  ⚙️  Using sequential worker initialization (colocated mode)
+Traceback (most recent call last):
+  File "/lustre/fs1/portfolios/nvr/projects/nvr_lpr_agentic/users/yidong/Projects/RL/examples/run_grpo_math.py", line 260, in <module>
+    main()
+  File "/lustre/fs1/portfolios/nvr/projects/nvr_lpr_agentic/users/yidong/Projects/RL/examples/run_grpo_math.py", line 192, in main
+    ) = setup(config, tokenizer, dataset, val_dataset)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fsw/portfolios/nvr/users/yidong/Projects/RL/nemo_rl/algorithms/grpo_legacy.py", line 559, in setup
+    policy_generation, vllm_time = init_vllm()
+                                   ^^^^^^^^^^^
+  File "/lustre/fsw/portfolios/nvr/users/yidong/Projects/RL/nemo_rl/algorithms/grpo_legacy.py", line 481, in init_vllm
+    pg = VllmGeneration(cluster=inference_cluster, config=generation_config)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fsw/portfolios/nvr/users/yidong/Projects/RL/nemo_rl/models/generation/vllm/vllm_generation.py", line 199, in __init__
+    self.worker_group = RayWorkerGroup(
+                        ^^^^^^^^^^^^^^^
+  File "/lustre/fsw/portfolios/nvr/users/yidong/Projects/RL/nemo_rl/distributed/worker_groups.py", line 398, in __init__
+    self._create_workers_from_bundle_indices(
+  File "/lustre/fsw/portfolios/nvr/users/yidong/Projects/RL/nemo_rl/distributed/worker_groups.py", line 446, in _create_workers_from_bundle_indices
+    py_executable = create_local_venv_on_each_node(
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fsw/portfolios/nvr/users/yidong/Projects/RL/nemo_rl/utils/venvs.py", line 178, in create_local_venv_on_each_node
+    paths = ray.get([actor for actor in actors])
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/ray/_private/auto_init_hook.py", line 21, in auto_init_wrapper
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/ray/_private/client_mode_hook.py", line 103, in wrapper
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/ray/_private/worker.py", line 2822, in get
+    values, debugger_breakpoint = worker.get_objects(object_refs, timeout=timeout)
+                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/ray/_private/worker.py", line 930, in get_objects
+    raise value.as_instanceof_cause()
+ray.exceptions.RayTaskError(FileNotFoundError): [36mray::_env_builder()[39m (pid=2556055, ip=10.49.195.96)
+  File "/lustre/fsw/portfolios/nvr/users/yidong/Projects/RL/nemo_rl/utils/venvs.py", line 144, in _env_builder
+    return create_local_venv(py_executable, venv_name, force_rebuild=force_rebuild)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lustre/fs1/portfolios/nvr/projects/nvr_lpr_agentic/users/yidong/Projects/RL/nemo_rl/utils/venvs.py", line 81, in create_local_venv
+    subprocess.run(uv_venv_cmd, check=True)
+  File "/usr/lib/python3.12/subprocess.py", line 548, in run
+    with Popen(*popenargs, **kwargs) as process:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/subprocess.py", line 1026, in __init__
+    self._execute_child(args, executable, preexec_fn, close_fds,
+  File "/usr/lib/python3.12/subprocess.py", line 1955, in _execute_child
+    raise child_exception_type(errno_num, err_msg, err_filename)
+FileNotFoundError: [Errno 2] No such file or directory: 'uv'
+2026-01-17 12:34:20,879	INFO worker.py:1694 -- Connecting to existing Ray cluster at address: 10.49.195.96:54514...
+2026-01-17 12:34:20,884	INFO worker.py:1879 -- Connected to Ray cluster. View the dashboard at [1m[32mhttp://10.49.195.96:8265 [39m[22m

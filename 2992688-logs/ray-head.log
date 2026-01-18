@@ -1,0 +1,306 @@
++ test -f /etc/shinit_v2
++ source /etc/shinit_v2
++++ sed -n 's/^NVRM.*Kernel Module\( for [a-z0-9_]*\| \) *\([^() ]*\).*$/\2/p' /proc/driver/nvidia/version
++++ sed 's/^$/unknown/'
+++ NV_DRIVER_VERS=550.127.05
+++ export _CUDA_COMPAT_PATH=/usr/local/cuda/compat
+++ _CUDA_COMPAT_PATH=/usr/local/cuda/compat
++++ hostname
+++ _CUDA_COMPAT_CHECKFILE=/usr/local/cuda/compat/.550.127.05.pool0-01436.checked
+++ _CUDA_COMPAT_REALLIB=/usr/local/cuda/compat/lib.real
+++ _CUDA_COMPAT_SYMLINK=/usr/local/cuda/compat/lib
++++ nvidia-smi -q -d COMPUTE
++++ grep '^CUDA Version'
++++ sed 's/^.*: //'
+++ _RUNNING_CUDA_VERSION=12.6
++++ echo 12.6.3.001
++++ cut -d . -f 1-2
+++ _CONTAINER_CUDA_VERSION=12.6
+++ '[' -e /dev/nvgpu -a '(' 12.6 = 12.6 ')' ']'
+++ '[' '(' '(' -n 550.127.05 -a -e /dev/nvidiactl ')' -o -e /dev/nvgpu ')' -a '!' -e /usr/local/cuda/compat/.550.127.05.pool0-01436.checked ']'
++++ cat /sys/module/mlx5_core/version
+++ _DETECTED_MOFED=23.10-3.2.2
+++ '[' -n 23.10-3.2.2 ']'
++++ uname -r
+++ '[' 23.10-3.2.2 '!=' 5.15.0-1073-oracle ']'
+++ dpkg --compare-versions 23.10-3.2.2 lt 4.9
+++ '[' -d /sys/bus/pci/drivers/efa ']'
+++ unset _DETECTED_MOFED
+++ unset _CUDA_COMPAT_CHECKFILE
+++ unset _CUDA_COMPAT_REALLIB
+++ unset _CUDA_COMPAT_SYMLINK
+++ unset _RUNNING_CUDA_VERSION
+++ unset _CONTAINER_CUDA_VERSION
++ '[' -z '' ']'
++ return
++ '[' -z '' ']'
++ return
++ touch /lustre/fs1/portfolios/nvr/projects/nvr_lpr_agentic/users/yidong/Projects/RL/2992688-logs/STARTED_RAY_HEAD
++ env
+NPP_VERSION=12.3.1.54
+SHELL=/bin/bash
+NVIDIA_VISIBLE_DEVICES=all
+NCCL_IB_TC=41 # Sets the traffic class. For OCI, TC41 maps to their priority queue.
+SLURM_STEP_NUM_TASKS=1
+DALI_BUILD=19497385
+OMPI_MCA_orte_precondition_transports=002daa3000000000-002daa3000000000
+SLURM_JOB_USER=yidong
+RAY_ENABLE_UV_RUN_RUNTIME_ENV=0
+SLURM_TASKS_PER_NODE=1
+CUSOLVER_VERSION=11.7.1.2
+SLURM_JOB_UID=29211
+SLURM_STEP_GPUS=0,1,2,3,4,5,6,7
+SLURM_TASK_PID=2439996
+CONTAINER=/lustre/fsw/portfolios/nvr/users/yidong/data/models/images/nvidian+nemo+verl_v2_enroot_dev0.8.5.sqsh
+CLUSTER_NAME=oci-nrt-cs-001-v1
+LOCAL_RANK=0
+CUBLAS_VERSION=12.6.4.1
+SLURM_JOB_GPUS=0,1,2,3,4,5,6,7
+PMIX_HOSTNAME=pool0-01436
+SLURM_LOCALID=0
+SLURM_SUBMIT_DIR=/lustre/fs1/portfolios/nvr/projects/nvr_lpr_agentic/users/yidong/Projects/RL
+HOSTNAME=pool0-01436
+SLURMD_NODENAME=pool0-01436
+NODE_OPTIONS=
+PMIX_SECURITY_MODE=none
+MASTER_PORT=59952
+SLURM_JOB_START_TIME=1768682929
+HYDRA_LAUNCHER_EXTRA_ARGS=--external-launcher
+NVIDIA_REQUIRE_CUDA=cuda>=9.0
+CUFFT_VERSION=11.3.0.4
+SLURM_STEP_NODELIST=pool0-01436
+UCX_IB_ROCE_LOCAL_SUBNET=y
+CUDA_CACHE_DISABLE=1
+MELLANOX_VISIBLE_DEVICES=all
+TENSORBOARD_PORT=6006
+NCCL_NET_PLUGIN=none # Must be explicitly set to avoid containers trying to use SHARP breaking on RoCE
+SLURM_CLUSTER_NAME=oci-nrt-cs-001
+_CUDA_COMPAT_STATUS=CUDA Driver OK
+SLURM_JOB_END_TIME=1768690129
+HF_DATASETS_CACHE=/lustre/fsw/portfolios/nvr/users/yidong/.cache/datasets
+SLURM_CPUS_ON_NODE=128
+TORCH_CUDA_ARCH_LIST=7.0 7.5 8.0 8.6 9.0+PTX
+NCCL_VERSION=2.23.4
+SLURM_UMASK=0022
+MODEL_OPT_VERSION=0.19.0
+SLURM_JOB_CPUS_PER_NODE=224
+PMIX_GDS_MODULE=ds21,hash
+CUSPARSE_VERSION=12.5.4.2
+ENV=/etc/shinit_v2
+SLURM_GPUS_ON_NODE=8
+PWD=/lustre/fs1/portfolios/nvr/projects/nvr_lpr_agentic/users/yidong/Projects/RL
+PRTE_MCA_plm_slurm_args=--external-launcher
+SLURM_GTIDS=0
+LOGNAME=yidong
+UCX_NET_DEVICES=mlx5_0:1,mlx5_1:1,mlx5_3:1,mlx5_4:1,mlx5_5:1,mlx5_6:1,mlx5_7:1,mlx5_8:1,mlx5_9:1,mlx5_10:1,mlx5_12:1,mlx5_13:1,mlx5_14:1,mlx5_15:1,mlx5_16:1,mlx5_17:1
+XDG_SESSION_TYPE=tty
+SLURM_JOB_PARTITION=interactive
+OPENUCX_VERSION=1.18.0
+NSIGHT_SYSTEMS_VERSION=2024.6.1.90
+NVIDIA_DRIVER_CAPABILITIES=all
+MANPATH=/cm/shared/apps/slurm/current/man:/cm/local/apps/environment-modules/4.5.3/share/man:/usr/local/man:/usr/local/share/man:/usr/share/man:/cm/local/apps/environment-modules/current/share/man:/cm/local/apps/environment-modules/current/share/man
+SLURM_TRES_PER_TASK=cpu=128
+POLYGRAPHY_VERSION=0.49.13
+conda_setup=
+SLURM_OOM_KILL_STEP=0
+NCCL_DEBUG=WARN # Must be WARN for FACT attribution. Don't allow override.
+PIP_BREAK_SYSTEM_PACKAGES=1
+SLURM_JOB_NUM_NODES=1
+OMPI_MCA_pml=ucx
+UCC_CL_BASIC_TLS=^sharp
+SRUN_DEBUG=3
+VLLM_WORKER_MULTIPROC_METHOD=spawn
+PMIX_SYSTEM_TMPDIR=/tmp
+SLURM_STEPID=0
+CUSPARSELT_VERSION=0.6.3.2
+TRT_VERSION=10.6.0.26
+PMIX_SERVER_URI41=pmix-server.2439912;tcp4://127.0.0.1:64687
+SLURM_JOBID=2992688
+UCX_IB_NUM_PATHS=4
+NCCL_IB_HCA==mlx5_0,mlx5_1,mlx5_10,mlx5_12,mlx5_13,mlx5_14,mlx5_15,mlx5_16,mlx5_17,mlx5_3,mlx5_4,mlx5_5,mlx5_6,mlx5_7,mlx5_8,mlx5_9
+WORLD_SIZE=1
+NVIDIA_PRODUCT_NAME=PyTorch
+RDMACORE_VERSION=39.0
+SLURM_LAUNCH_NODE_IPADDR=10.49.192.126
+SLURM_JOB_QOS=normal
+I_MPI_HYDRA_BOOTSTRAP_EXEC_EXTRA_ARGS=--external-launcher
+PMIX_BFROP_BUFFER_TYPE=PMIX_BFROP_BUFFER_NON_DESC
+MOTD_SHOWN=pam
+NVPL_LAPACK_MATH_MODE=PEDANTIC
+HOME=/root
+LANG=C.UTF-8
+SLURM_JOB_DEPENDENCY=singleton
+NCCL_IB_GID_INDEX=3
+PMIX_DSTORE_21_BASE_PATH=/cm/local/apps/slurm/var/spool/pmix.2992688.0//pmix_dstor_ds21_2439912
+LS_COLORS=
+SLURMD_DEBUG=2
+SLURM_PROCID=0
+COCOAPI_VERSION=2.0+nv0.8.1
+PMIX_VERSION=4.1.3
+CUDA_VERSION=12.6.3.001
+PYTORCH_VERSION=2.6.0a0+df5bbc0
+PMIX_MCA_psec=none
+CURAND_VERSION=10.3.7.77
+RX_QUEUE_LEN=8192
+_SLURM_SPANK_OPTION_pyxis_container_mounts=/lustre:/lustre
+TMPDIR=/tmp
+PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
+SLURM_CPUS_PER_TASK=128
+PYTORCH_BUILD_NUMBER=0
+SLURM_NTASKS=1
+HF_HUB_ENABLE_HF_TRANSFER=1
+SLURM_TOPOLOGY_ADDR=Switch.3.1.Switch.2.4.Switch.1.8.pool0-01436
+IB_RX_QUEUE_LEN=8192
+SSH_CONNECTION=10.137.8.126 53978 10.49.195.48 22
+SLURM_PMIX_MAPPING_SERV=(vector,(0,1,1))
+CUTENSOR_VERSION=2.0.2.5
+PMIX_RANK=0
+PIP_DEFAULT_TIMEOUT=100
+PMIX_SERVER_URI2=pmix-server.2439912;tcp4://127.0.0.1:64687
+PMIX_SERVER_URI3=pmix-server.2439912;tcp4://127.0.0.1:64687
+PMIX_SERVER_URI4=pmix-server.2439912;tcp4://127.0.0.1:64687
+SLURM_DISTRIBUTION=cyclic
+MOUNTS=/lustre:/lustre
+NVFUSER_BUILD_VERSION=0d33366
+HPCX_VERSION=2.21
+CLOUD_TYPE=oci
+HYDRA_BOOTSTRAP=slurm
+TORCH_CUDNN_V8_API_ENABLED=1
+MASTER_ADDR=pool0-01436
+CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
+SLURM_TOPOLOGY_ADDR_PATTERN=switch.switch.switch.node
+SLURM_SRUN_COMM_HOST=10.49.192.126
+HF_HOME=/lustre/fsw/portfolios/nvr/users/yidong/.cache/huggingface
+SLURM_PMIXP_ABORT_AGENT_PORT=33321
+CUDNN_FRONTEND_VERSION=1.8.0
+NCCL_IB_QPS_PER_CONNECTION=4 # Scale-dependent, =4 is suggested for small (<2048 GPU) jobs by OCI. Observed =1 is fine at all scales.
+LESSCLOSE=/usr/bin/lesspipe %s %s
+XDG_SESSION_CLASS=user
+UCX_IB_TRAFFIC_CLASS=41 # Must match NCCL_IB_TC, 41 on OCI. 
+TERM=
+PMIX_SERVER_URI21=pmix-server.2439912;tcp4://127.0.0.1:64687
+GDRCOPY_VERSION=2.4.1
+home=/lustre/fsw/portfolios/nvr/users/yidong
+NVFUSER_VERSION=0d33366
+LESSOPEN=| /usr/bin/lesspipe %s
+USER=root
+OPENMPI_VERSION=4.1.7
+NVJPEG_VERSION=12.3.3.54
+LIBRARY_PATH=/usr/local/cuda/lib64/stubs:
+SLURM_NODELIST=pool0-01436
+PYTHONIOENCODING=utf-8
+ENVIRONMENT=BATCH
+AWS_OFI_NCCL_VERSION=1.12.1
+SLURM_SRUN_COMM_PORT=33797
+SLURM_STEP_ID=0
+SLURM_JOB_ACCOUNT=nvr_lpr_agentic
+SLURM_PRIO_PROCESS=0
+SLURM_NPROCS=1
+NCCL_IB_TIMEOUT=20 # timeout=4.096 µs * 2 ^ NCCL_IB_TIMEOUT; NCCL_IB_TIMEOUT=20 --> timeout ~4.3s
+SHLVL=1
+MAX_JOBS=32
+SLURM_NNODES=1
+BASH_ENV=/etc/bash.bashrc
+PMIX_MCA_gds=ds21,hash
+OMPI_MCA_coll=^hcoll
+CUDNN_VERSION=9.5.1.17
+XDG_SESSION_ID=2462392
+EFA_VERSION=1.34.0
+NCCL_IB_SL=0
+NSIGHT_COMPUTE_VERSION=2024.3.2.3
+SLURM_SUBMIT_HOST=oci-nrt-cs-001-login-02
+DALI_VERSION=1.43.0
+PIP_ROOT_USER_ACTION=ignore
+PMIX_SERVER_TMPDIR=/cm/local/apps/slurm/var/spool/pmix.2992688.0/
+COMMAND=cd /lustre/fsw/portfolios/nvr/users/yidong/Projects/RL && export NEMO_RL_PY_EXECUTABLES_SYSTEM=1 && export PYTHONPATH=/lustre/fsw/portfolios/nvr/users/yidong/Projects/RL:$PYTHONPATH && python examples/run_grpo_math.py --config examples/configs/recipes/llm/grpo-deepseek-r1-distill-qwen-1.5b-deepscaler-test.yaml grpo.max_num_steps=10 grpo.num_prompts_per_step=8 grpo.num_generations_per_prompt=4 checkpointing.enabled=false logger.log_dir=/lustre/fsw/portfolios/nvr/users/yidong/logs/grpo-legacy-test cluster.gpus_per_node=8
+JUPYTER_PORT=8888
+PYTORCH_HOME=/opt/pytorch/pytorch
+LD_LIBRARY_PATH=/usr/local/cuda/compat/lib.real:/usr/local/lib/python3.12/dist-packages/torch/lib:/usr/local/lib/python3.12/dist-packages/torch_tensorrt/lib:/usr/local/cuda/compat/lib:/usr/local/nvidia/lib:/usr/local/nvidia/lib64
+NVIDIA_BUILD_ID=122402533
+XDG_RUNTIME_DIR=/run/user/29211
+SLURM_JOB_ID=2992688
+RANK=0
+UCX_MAX_RNDV_RAILS=4
+SLURM_NODEID=0
+SLURMD_TRES_FREQ=gpu:high,memory=high
+SLURM_STEP_NUM_NODES=1
+SSH_CLIENT=10.137.8.126 53978 22
+OMPI_MCA_coll_hcoll_enable=0
+UCX_TLS=rc_v,sm
+OPAL_PREFIX=/opt/hpcx/ompi
+CMD_WLM_CLUSTER_NAME=oci-nrt-cs-001
+PMIX_NAMESPACE=slurm.pmix.2992688.0
+CUDA_DRIVER_VERSION=560.35.05
+TRANSFORMER_ENGINE_VERSION=1.12
+LC_ALL=C.UTF-8
+HCOLL_ENABLE_MCAST_ALL=0
+SLURM_STEP_TASKS_PER_NODE=1
+PYTORCH_BUILD_VERSION=2.6.0a0+df5bbc0
+_CUDA_COMPAT_PATH=/usr/local/cuda/compat
+CUDA_HOME=/usr/local/cuda
+_SLURM_SPANK_OPTION_pyxis_container_name=ray-head
+SLURM_MPI_TYPE=pmix
+CUDA_MODULE_LOADING=LAZY
+NVIDIA_REQUIRE_JETPACK_HOST_MOUNTS=
+SLURM_CONF=/cm/shared/apps/slurm/var/etc/oci-nrt-cs-001/slurm.conf
+PATH=/usr/local/lib/python3.12/dist-packages/torch_tensorrt/bin:/usr/local/mpi/bin:/usr/local/nvidia/bin:/usr/local/cuda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/local/ucx/bin:/opt/amazon/efa/bin:/opt/tensorrt/bin
+SLURM_JOB_NAME=grpo-test-sys
+NCCL_IGNORE_CPU_AFFINITY=0 
+DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/29211/bus
+GPUS_PER_NODE=8
+MOFED_VERSION=5.4-rdmacore39.0
+NVIDIA_PYTORCH_VERSION=24.11
+TRTOSS_VERSION=
+SLURM_STEP_LAUNCHER_PORT=33797
+OMPI_MCA_plm_slurm_args=--external-launcher
+SLURM_JOB_GID=30
+CPATH=/cm/shared/apps/slurm/current/include:/cm/local/apps/python3/include
+DEBIAN_FRONTEND=noninteractive
+TORCH_ALLOW_TF32_CUBLAS_OVERRIDE=1
+NCCL_CROSS_NIC=0 # 0 for rail-optimized, 1 for fat-tree/cross-rail
+UCX_MAX_EAGER_RAILS=4
+OLDPWD=/home/yidong
+CLUSTER_MANAGER=BRIGHT
+SLURM_JOB_NODELIST=pool0-01436
+I_MPI_HYDRA_BOOTSTRAP=slurm
+_=/usr/bin/env
++ export -f exit-dramatically
++ monitor-sidecar
++ set +x
++ sed -i 's/context\.py_executable = " "\.join(self\.nsight_cmd) + " python"/context.py_executable = " ".join(self.nsight_cmd) + f" {context.py_executable}"/g' '/opt/nemo_rl_venv/lib64/python*/site-packages/ray/_private/runtime_env/nsight.py'
++ log-sync-sidecar
++ set +x
+RAY_LOG_SYNC_FREQUENCY is not set, skipping log sync sidecar
+sed: can't read /opt/nemo_rl_venv/lib64/python*/site-packages/ray/_private/runtime_env/nsight.py: No such file or directory
++ cat
++ tee /launch-head.sh
+ray start --head     --disable-usage-stats     --resources="{\"worker_units\": 8, \"slurm_managed_ray_cluster\": 1}"     --node-ip-address="10.49.192.126"     --port=54514     --ray-client-server-port=10001     --dashboard-port=8265     --dashboard-host="10.49.192.126"     --include-dashboard=True         --node-manager-port=53002     --object-manager-port=53004     --runtime-env-agent-port=53006     --dashboard-agent-grpc-port=53008     --dashboard-agent-listen-port=52366     --metrics-export-port=53010              --block 
++ chmod +x /launch-head.sh
++ count=0
++ [[ 0 -lt 3 ]]
++ bash /launch-head.sh
+2026-01-17 12:49:38,643	INFO usage_lib.py:441 -- Usage stats collection is disabled.
+2026-01-17 12:49:38,643	INFO scripts.py:971 -- [37mLocal node IP[39m: [1m10.49.192.126[22m
+2026-01-17 12:49:41,161	SUCC scripts.py:1007 -- [32m--------------------[39m
+2026-01-17 12:49:41,161	SUCC scripts.py:1008 -- [32mRay runtime started.[39m
+2026-01-17 12:49:41,161	SUCC scripts.py:1009 -- [32m--------------------[39m
+2026-01-17 12:49:41,161	INFO scripts.py:1011 -- [36mNext steps[39m
+2026-01-17 12:49:41,161	INFO scripts.py:1014 -- To add another node to this Ray cluster, run
+2026-01-17 12:49:41,161	INFO scripts.py:1017 -- [1m  ray start --address='10.49.192.126:54514'[22m
+2026-01-17 12:49:41,161	INFO scripts.py:1026 -- To connect to this Ray cluster:
+2026-01-17 12:49:41,161	INFO scripts.py:1028 -- [35mimport[39m[26m ray
+2026-01-17 12:49:41,161	INFO scripts.py:1029 -- ray[35m.[39m[26minit(_node_ip_address[35m=[39m[26m[33m'10.49.192.126'[39m[26m)
+2026-01-17 12:49:41,161	INFO scripts.py:1041 -- To submit a Ray job using the Ray Jobs CLI:
+2026-01-17 12:49:41,161	INFO scripts.py:1042 -- [1m  RAY_ADDRESS='http://10.49.192.126:8265' ray job submit --working-dir . -- python my_script.py[22m
+2026-01-17 12:49:41,161	INFO scripts.py:1051 -- See https://docs.ray.io/en/latest/cluster/running-applications/job-submission/index.html 
+2026-01-17 12:49:41,161	INFO scripts.py:1055 -- for more information on submitting Ray jobs to the Ray cluster.
+2026-01-17 12:49:41,161	INFO scripts.py:1060 -- To terminate the Ray runtime, run
+2026-01-17 12:49:41,161	INFO scripts.py:1061 -- [1m  ray stop[22m
+2026-01-17 12:49:41,161	INFO scripts.py:1064 -- To view the status of the cluster, use
+2026-01-17 12:49:41,161	INFO scripts.py:1065 --   [1mray status[22m[26m
+2026-01-17 12:49:41,161	INFO scripts.py:1069 -- To monitor and debug Ray, view the dashboard at 
+2026-01-17 12:49:41,161	INFO scripts.py:1070 --   [1m10.49.192.126:8265[22m[26m
+2026-01-17 12:49:41,161	INFO scripts.py:1077 -- [4mIf connection to the dashboard fails, check your firewall settings and network configuration.[24m
+2026-01-17 12:49:41,162	INFO scripts.py:1181 -- [36m[1m--block[22m[39m
+2026-01-17 12:49:41,162	INFO scripts.py:1182 -- This command will now block forever until terminated by a signal.
+2026-01-17 12:49:41,162	INFO scripts.py:1185 -- Running subprocesses are monitored and a message will be printed if any of them terminate unexpectedly. Subprocesses exit with SIGTERM will be treated as graceful, thus NOT reported.
