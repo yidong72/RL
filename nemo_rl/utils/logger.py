@@ -23,26 +23,98 @@ import tempfile
 import threading
 import time
 from abc import ABC, abstractmethod
-from typing import Any, Callable, Mapping, NotRequired, Optional, TypedDict
+from typing import Any, Callable, Mapping, NotRequired, Optional, TypedDict, TYPE_CHECKING
 
-import mlflow
 import numpy as np
-import ray
-import requests
-import swanlab
 import torch
-import wandb
-from matplotlib import pyplot as plt
-from prometheus_client.parser import text_string_to_metric_families
-from prometheus_client.samples import Sample
-from rich.box import ROUNDED
-from rich.console import Console
-from rich.logging import RichHandler
-from rich.panel import Panel
-from torch.utils.tensorboard import SummaryWriter
 
-from nemo_rl.data.interfaces import LLMMessageLogType
-from nemo_rl.distributed.batched_data_dict import BatchedDataDict
+# Lazy imports for optional dependencies
+# These are only imported when actually used to avoid import-time failures
+mlflow = None
+swanlab = None
+wandb = None
+ray = None
+SummaryWriter = None
+text_string_to_metric_families = None
+Sample = None
+
+
+def _lazy_import_mlflow():
+    global mlflow
+    if mlflow is None:
+        import mlflow as _mlflow
+        mlflow = _mlflow
+    return mlflow
+
+
+def _lazy_import_swanlab():
+    global swanlab
+    if swanlab is None:
+        import swanlab as _swanlab
+        swanlab = _swanlab
+    return swanlab
+
+
+def _lazy_import_wandb():
+    global wandb
+    if wandb is None:
+        import wandb as _wandb
+        wandb = _wandb
+    return wandb
+
+
+def _lazy_import_ray():
+    global ray
+    if ray is None:
+        import ray as _ray
+        ray = _ray
+    return ray
+
+
+def _lazy_import_tensorboard():
+    global SummaryWriter
+    if SummaryWriter is None:
+        from torch.utils.tensorboard import SummaryWriter as _SummaryWriter
+        SummaryWriter = _SummaryWriter
+    return SummaryWriter
+
+
+def _lazy_import_prometheus():
+    global text_string_to_metric_families, Sample
+    if text_string_to_metric_families is None:
+        from prometheus_client.parser import text_string_to_metric_families as _tsmf
+        from prometheus_client.samples import Sample as _Sample
+        text_string_to_metric_families = _tsmf
+        Sample = _Sample
+    return text_string_to_metric_families, Sample
+
+
+# These can be imported at module load time - they're standard/lightweight
+try:
+    import requests
+except ImportError:
+    requests = None
+
+try:
+    from matplotlib import pyplot as plt
+except ImportError:
+    plt = None
+
+try:
+    from rich.box import ROUNDED
+    from rich.console import Console
+    from rich.logging import RichHandler
+    from rich.panel import Panel
+except ImportError:
+    ROUNDED = None
+    Console = None
+    RichHandler = None
+    Panel = None
+
+# Lazy import for data interfaces
+if TYPE_CHECKING:
+    from nemo_rl.data.interfaces import LLMMessageLogType
+    from nemo_rl.distributed.batched_data_dict import BatchedDataDict
 
 # Flag to track if rich logging has been configured
 _rich_logging_configured = False
@@ -118,6 +190,8 @@ class TensorboardLogger(LoggerInterface):
     """Tensorboard logger backend."""
 
     def __init__(self, cfg: TensorboardConfig, log_dir: Optional[str] = None):
+        # Lazy import tensorboard to avoid import-time failures
+        _lazy_import_tensorboard()
         self.writer = SummaryWriter(log_dir=log_dir)
         print(f"Initialized TensorboardLogger at {log_dir}")
 
@@ -181,8 +255,14 @@ class TensorboardLogger(LoggerInterface):
         Args:
             params: Dictionary of hyperparameters to log
         """
-        # Flatten the params because add_hparams does not support nested dicts
-        self.writer.add_hparams(flatten_dict(params), {})
+        try:
+            # Flatten the params because add_hparams does not support nested dicts
+            self.writer.add_hparams(flatten_dict(params), {})
+        except AttributeError as e:
+            # Handle numpy 2.0 compatibility issues with tensorboard
+            # (e.g., np.string_ was removed in NumPy 2.0)
+            import logging
+            logging.warning(f"Failed to log hyperparams to TensorBoard (numpy/tensorboard version mismatch): {e}")
 
     def log_plot(self, figure: plt.Figure, step: int, name: str) -> None:
         """Log a plot to Tensorboard.
@@ -198,6 +278,7 @@ class WandbLogger(LoggerInterface):
     """Weights & Biases logger backend."""
 
     def __init__(self, cfg: WandbConfig, log_dir: Optional[str] = None):
+        _lazy_import_wandb()
         self.run = wandb.init(**cfg, dir=log_dir)
         self._log_code()
         self._log_diffs()
@@ -393,6 +474,7 @@ class SwanlabLogger(LoggerInterface):
             cfg (SwanlabConfig): Configuration for the Swanlab run (e.g., project and name).
             log_dir (Optional[str]): Optional offline log directory passed to Swanlab's init.
         """
+        _lazy_import_swanlab()
         self.run = swanlab.init(**cfg, logdir=log_dir)
         print(
             f"Initialized SwanlabLogger for project {cfg.get('project')}, run {cfg.get('name')} (with offline logdir={log_dir})"
@@ -483,6 +565,7 @@ class RayGpuMonitorLogger:
 
     def start(self) -> None:
         """Start the GPU monitoring thread."""
+        _lazy_import_ray()
         if not ray.is_initialized():
             raise ValueError(
                 "Ray must be initialized with nemo_rl.distributed.virtual_cluster.init_ray() before the GPU logging can begin."
@@ -645,6 +728,7 @@ class RayGpuMonitorLogger:
         )
         parser_fn = self._parse_metric if metrics else self._parse_gpu_sku
 
+        _lazy_import_ray()
         if not ray.is_initialized():
             print("Ray is not initialized. Cannot collect GPU metrics.")
             return {}
@@ -691,6 +775,7 @@ class RayGpuMonitorLogger:
         Returns:
             Dictionary of GPU metrics
         """
+        _lazy_import_prometheus()
         url = f"http://{metric_address}/metrics"
 
         try:
@@ -751,6 +836,7 @@ class MLflowLogger(LoggerInterface):
             cfg: MLflow configuration
             log_dir: Optional log directory (used as fallback if artifact_location not in cfg)
         """
+        _lazy_import_mlflow()
         tracking_uri = cfg.get("tracking_uri")
         if tracking_uri:
             mlflow.set_tracking_uri(tracking_uri)
@@ -929,7 +1015,7 @@ class Logger(LoggerInterface):
             logger.log_hyperparams(params)
 
     def log_batched_dict_as_jsonl(
-        self, to_log: BatchedDataDict[Any] | dict[str, Any], filename: str
+        self, to_log: "BatchedDataDict[Any] | dict[str, Any]", filename: str
     ) -> None:
         """Log a list of dictionaries to a JSONL file.
 
@@ -937,6 +1023,7 @@ class Logger(LoggerInterface):
             to_log: BatchedDataDict to log
             filename: Filename to log to (within the log directory)
         """
+        from nemo_rl.distributed.batched_data_dict import BatchedDataDict
         if not isinstance(to_log, BatchedDataDict):
             to_log = BatchedDataDict(to_log)
 
@@ -1239,7 +1326,7 @@ def configure_rich_logging(
 
 
 def print_message_log_samples(
-    message_logs: list[LLMMessageLogType],
+    message_logs: "list[LLMMessageLogType]",
     rewards: list[float],
     num_samples: int = 5,
     step: int = 0,

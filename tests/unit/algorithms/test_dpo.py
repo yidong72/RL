@@ -23,10 +23,305 @@ from nemo_rl.algorithms.dpo import (
     _default_dpo_save_state,
     add_ref_logprobs_to_data,
     dpo_train,
+    DPOTrainer,
+    DPOConfig,
+    DPOLoss,
+    create_dpo_loss_function,
 )
 from nemo_rl.algorithms.loss_functions import PreferenceLoss
 from nemo_rl.distributed.batched_data_dict import BatchedDataDict
 from nemo_rl.distributed.named_sharding import NamedSharding
+
+
+class TestDPOTrainer:
+    """Tests for the new DPOTrainer class."""
+
+    def test_import_dpo_trainer(self):
+        """Test DPOTrainer can be imported from dpo package."""
+        from nemo_rl.algorithms.dpo import DPOTrainer
+        assert DPOTrainer is not None
+
+    def test_dpo_trainer_initialization(self):
+        """Test DPOTrainer initializes correctly."""
+        config = {
+            "dpo": {
+                "max_num_epochs": 1,
+                "max_num_steps": 100,
+                "val_period": 50,
+                "val_batches": 5,
+                "reference_policy_kl_penalty": 0.1,
+            },
+            "policy": {},
+            "data": {},
+        }
+        trainer = DPOTrainer(config)
+        assert trainer.val_period == 50
+        assert trainer.val_batches == 5
+
+    def test_dpo_trainer_extends_base_trainer(self):
+        """Test DPOTrainer extends BaseTrainer."""
+        from nemo_rl.trainers.base import BaseTrainer
+        config = {"dpo": {}, "policy": {}}
+        trainer = DPOTrainer(config)
+        assert isinstance(trainer, BaseTrainer)
+
+    def test_dpo_trainer_has_required_methods(self):
+        """Test DPOTrainer has all required methods."""
+        config = {"dpo": {}, "policy": {}}
+        trainer = DPOTrainer(config)
+        
+        assert hasattr(trainer, "_train_step")
+        assert hasattr(trainer, "_compute_loss")
+        assert hasattr(trainer, "_validate_step")
+        assert hasattr(trainer, "_prepare_batch")
+        assert callable(trainer._train_step)
+        assert callable(trainer._compute_loss)
+
+    def test_dpo_loss_factory(self):
+        """Test DPO loss function factory."""
+        config = {
+            "reference_policy_kl_penalty": 0.1,
+            "preference_loss_weight": 1.0,
+            "sft_loss_weight": 0.0,
+        }
+        loss_fn = create_dpo_loss_function(config)
+        assert loss_fn is not None
+
+    def test_dpo_loss_class(self):
+        """Test DPOLoss class is exported."""
+        from nemo_rl.algorithms.dpo import DPOLoss
+        assert DPOLoss is not None
+
+
+class TestDPOLossComputation:
+    """Tests for DPO loss computation (AC-9.1) and beta parameter (AC-9.3)."""
+
+    @pytest.fixture
+    def device(self):
+        """Return appropriate device for testing."""
+        return torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+    def test_dpo_loss_computation_basic(self, device):
+        """Test that DPO loss computes correctly (AC-9.1)."""
+        from nemo_rl.algorithms.loss_functions import DPOLossFn
+        
+        config = {
+            "reference_policy_kl_penalty": 0.1,
+            "preference_loss_weight": 1.0,
+            "sft_loss_weight": 0.0,
+            "preference_average_log_probs": False,
+            "sft_average_log_probs": False,
+        }
+        loss_fn = DPOLossFn(config)
+        
+        # Create mock data for chosen/rejected pairs
+        batch_size = 4  # 2 chosen + 2 rejected
+        seq_len = 10
+        vocab_size = 100
+        
+        # Logits - move to device
+        next_token_logits = torch.randn(batch_size, seq_len, vocab_size, device=device)
+        
+        # Input ids - move to device
+        input_ids = torch.randint(0, vocab_size, (batch_size, seq_len), device=device)
+        
+        # Reference policy logprobs
+        reference_policy_logprobs = torch.randn(batch_size, seq_len, device=device)
+        
+        # Masks
+        token_mask = torch.ones(batch_size, seq_len, device=device)
+        sample_mask = torch.ones(batch_size, device=device)
+        
+        data = BatchedDataDict({
+            "input_ids": input_ids,
+            "reference_policy_logprobs": reference_policy_logprobs,
+            "token_mask": token_mask,
+            "sample_mask": sample_mask,
+        })
+        
+        global_valid_seqs = torch.tensor(float(batch_size), device=device)
+        global_valid_toks = torch.tensor(float(batch_size * (seq_len - 1)), device=device)
+        
+        loss, metrics = loss_fn(
+            next_token_logits,
+            data,
+            global_valid_seqs=global_valid_seqs,
+            global_valid_toks=global_valid_toks,
+        )
+        
+        # Verify loss is valid
+        assert loss.ndim == 0, "Loss should be a scalar"
+        assert not torch.isnan(loss), "Loss should not be NaN"
+        
+        # Verify metrics
+        assert "loss" in metrics
+        assert "preference_loss" in metrics
+        assert "accuracy" in metrics
+        assert "rewards_chosen_mean" in metrics
+        assert "rewards_rejected_mean" in metrics
+
+    def test_dpo_loss_beta_parameter_effect(self, device):
+        """Test that beta (reference_policy_kl_penalty) affects training correctly (AC-9.3)."""
+        from nemo_rl.algorithms.loss_functions import DPOLossFn
+        
+        # Create identical data for both tests
+        batch_size = 4
+        seq_len = 10
+        vocab_size = 100
+        
+        torch.manual_seed(42)
+        next_token_logits = torch.randn(batch_size, seq_len, vocab_size, device=device)
+        input_ids = torch.randint(0, vocab_size, (batch_size, seq_len), device=device)
+        reference_policy_logprobs = torch.randn(batch_size, seq_len, device=device)
+        token_mask = torch.ones(batch_size, seq_len, device=device)
+        sample_mask = torch.ones(batch_size, device=device)
+        
+        data = BatchedDataDict({
+            "input_ids": input_ids,
+            "reference_policy_logprobs": reference_policy_logprobs,
+            "token_mask": token_mask,
+            "sample_mask": sample_mask,
+        })
+        
+        global_valid_seqs = torch.tensor(float(batch_size), device=device)
+        global_valid_toks = torch.tensor(float(batch_size * (seq_len - 1)), device=device)
+        
+        # Test with low beta (0.01)
+        config_low_beta = {
+            "reference_policy_kl_penalty": 0.01,
+            "preference_loss_weight": 1.0,
+            "sft_loss_weight": 0.0,
+            "preference_average_log_probs": False,
+            "sft_average_log_probs": False,
+        }
+        loss_fn_low_beta = DPOLossFn(config_low_beta)
+        loss_low, metrics_low = loss_fn_low_beta(
+            next_token_logits.clone(),
+            data,
+            global_valid_seqs=global_valid_seqs,
+            global_valid_toks=global_valid_toks,
+        )
+        
+        # Test with high beta (1.0)
+        config_high_beta = {
+            "reference_policy_kl_penalty": 1.0,
+            "preference_loss_weight": 1.0,
+            "sft_loss_weight": 0.0,
+            "preference_average_log_probs": False,
+            "sft_average_log_probs": False,
+        }
+        loss_fn_high_beta = DPOLossFn(config_high_beta)
+        loss_high, metrics_high = loss_fn_high_beta(
+            next_token_logits.clone(),
+            data,
+            global_valid_seqs=global_valid_seqs,
+            global_valid_toks=global_valid_toks,
+        )
+        
+        # Beta should affect the preference loss (scaling the reward difference)
+        # With higher beta, the sigmoid is steeper, which affects the loss
+        # The key is that different beta values produce different losses
+        assert loss_low.item() != loss_high.item(), \
+            "Different beta values should produce different losses"
+
+    def test_dpo_loss_with_sft_component(self, device):
+        """Test DPO loss with SFT loss component enabled."""
+        from nemo_rl.algorithms.loss_functions import DPOLossFn
+        
+        config = {
+            "reference_policy_kl_penalty": 0.1,
+            "preference_loss_weight": 1.0,
+            "sft_loss_weight": 0.5,  # Enable SFT component
+            "preference_average_log_probs": False,
+            "sft_average_log_probs": False,
+        }
+        loss_fn = DPOLossFn(config)
+        
+        batch_size = 4
+        seq_len = 10
+        vocab_size = 100
+        
+        next_token_logits = torch.randn(batch_size, seq_len, vocab_size, device=device)
+        input_ids = torch.randint(0, vocab_size, (batch_size, seq_len), device=device)
+        reference_policy_logprobs = torch.randn(batch_size, seq_len, device=device)
+        token_mask = torch.ones(batch_size, seq_len, device=device)
+        sample_mask = torch.ones(batch_size, device=device)
+        
+        data = BatchedDataDict({
+            "input_ids": input_ids,
+            "reference_policy_logprobs": reference_policy_logprobs,
+            "token_mask": token_mask,
+            "sample_mask": sample_mask,
+        })
+        
+        global_valid_seqs = torch.tensor(float(batch_size), device=device)
+        global_valid_toks = torch.tensor(float(batch_size * (seq_len - 1)), device=device)
+        
+        loss, metrics = loss_fn(
+            next_token_logits,
+            data,
+            global_valid_seqs=global_valid_seqs,
+            global_valid_toks=global_valid_toks,
+        )
+        
+        # Verify SFT loss is included in metrics
+        assert "sft_loss" in metrics
+        assert metrics["sft_loss"] != 0.0, "SFT loss should be non-zero when enabled"
+
+    def test_preference_loss_accuracy_metric(self):
+        """Test that accuracy metric correctly reflects chosen vs rejected preference."""
+        from nemo_rl.algorithms.loss_functions import PreferenceLoss
+        
+        loss_fn = PreferenceLoss()
+        
+        # Create rewards where chosen > rejected for all pairs
+        # Format: [chosen_1, rejected_1, chosen_2, rejected_2]
+        rewards = torch.tensor([5.0, 1.0, 4.0, 2.0])  # chosen always higher
+        sample_mask = torch.ones(4)
+        
+        data = BatchedDataDict({
+            "sample_mask": sample_mask,
+        })
+        
+        global_valid_seqs = torch.tensor(4.0)
+        
+        loss, metrics = loss_fn(
+            rewards,
+            data,
+            global_valid_seqs=global_valid_seqs,
+            global_valid_toks=None,
+        )
+        
+        # Accuracy should be 1.0 since chosen > rejected for all pairs
+        assert metrics["accuracy"] == 1.0, "Accuracy should be 1.0 when chosen > rejected always"
+
+    def test_preference_loss_rewards_mean_metrics(self):
+        """Test that reward mean metrics are computed correctly."""
+        from nemo_rl.algorithms.loss_functions import PreferenceLoss
+        
+        loss_fn = PreferenceLoss()
+        
+        # [chosen_1, rejected_1, chosen_2, rejected_2]
+        rewards = torch.tensor([4.0, 2.0, 6.0, 3.0])
+        sample_mask = torch.ones(4)
+        
+        data = BatchedDataDict({
+            "sample_mask": sample_mask,
+        })
+        
+        global_valid_seqs = torch.tensor(4.0)
+        
+        loss, metrics = loss_fn(
+            rewards,
+            data,
+            global_valid_seqs=global_valid_seqs,
+            global_valid_toks=None,
+        )
+        
+        # Mean of chosen: (4 + 6) / 2 = 5.0
+        # Mean of rejected: (2 + 3) / 2 = 2.5
+        assert abs(metrics["rewards_chosen_mean"] - 5.0) < 0.01
+        assert abs(metrics["rewards_rejected_mean"] - 2.5) < 0.01
 
 
 class MockPolicy:
@@ -274,7 +569,7 @@ def test_exit_on_timeout(mock_dpo_components, capsys):
     dpo_save_state = _default_dpo_save_state()
 
     # Mock TimeoutChecker to return False for first 7 checks, then True (timeout)
-    with patch("nemo_rl.algorithms.dpo.TimeoutChecker") as mock_timeout_class:
+    with patch("nemo_rl.algorithms.dpo_legacy.TimeoutChecker") as mock_timeout_class:
         mock_timeout_instance = MagicMock()
         # Create a side_effect that returns False 7 times, then True
         check_results = [False] * 7 + [True]

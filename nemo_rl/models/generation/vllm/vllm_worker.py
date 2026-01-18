@@ -166,31 +166,46 @@ class BaseVllmGenerationWorker:
 
         logger = init_logger("vllm_patch")
 
-        def _get_vllm_file(relative_path: str) -> str:
-            """Return absolute path to a vLLM file or raise if it cannot be found.
+        def _get_vllm_file(relative_path: str, required: bool = True) -> str | None:
+            """Return absolute path to a vLLM file or None if it cannot be found.
 
             The relative_path should be a POSIX-style path under the vllm
             package root, e.g. "v1/executor/ray_executor.py" or
             "attention/layer.py".
+
+            Args:
+                relative_path: Path to the file relative to vLLM package root
+                required: If True, raise error when file not found. If False, return None.
+
+            Returns:
+                Absolute path to the file, or None if not found and not required.
             """
             spec = find_spec("vllm")
             if spec is None or not spec.submodule_search_locations:
-                raise RuntimeError(
-                    "vLLM package not found while attempting to patch "
-                    f"'{relative_path}'. Ensure vLLM is installed and "
-                    "available in this environment."
-                )
+                if required:
+                    raise RuntimeError(
+                        "vLLM package not found while attempting to patch "
+                        f"'{relative_path}'. Ensure vLLM is installed and "
+                        "available in this environment."
+                    )
+                return None
 
             base_dir = next(iter(spec.submodule_search_locations))
             file_path = os.path.join(base_dir, *relative_path.split("/"))
 
             if not os.path.exists(file_path):
-                raise RuntimeError(
-                    "Failed to locate expected vLLM file to patch. "
-                    f"Looked for '{relative_path}' at '{file_path}'. "
-                    "This likely indicates an unexpected vLLM installation "
-                    "layout or version mismatch."
+                if required:
+                    raise RuntimeError(
+                        "Failed to locate expected vLLM file to patch. "
+                        f"Looked for '{relative_path}' at '{file_path}'. "
+                        "This likely indicates an unexpected vLLM installation "
+                        "layout or version mismatch."
+                    )
+                logger.warning(
+                    f"vLLM file '{relative_path}' not found at '{file_path}'. "
+                    "Skipping patch (may indicate older vLLM version)."
                 )
+                return None
 
             return file_path
 
@@ -203,7 +218,10 @@ class BaseVllmGenerationWorker:
                 - This is a workaround to fix async vllm in some scenarios.
                 - See https://github.com/NVIDIA-NeMo/RL/pull/898 for more details.
             """
-            file_to_patch = _get_vllm_file("v1/executor/ray_executor.py")
+            file_to_patch = _get_vllm_file("v1/executor/ray_executor.py", required=False)
+            if file_to_patch is None:
+                logger.info("Skipping vLLM ray_executor patch (file not found in this vLLM version)")
+                return
 
             with open(file_to_patch, "r") as f:
                 content = f.read()
@@ -246,7 +264,10 @@ class BaseVllmGenerationWorker:
 
             This is properly fixed in https://github.com/vllm-project/vllm/pull/28763. We can remove this patch once we upgrade to a version of vllm that contains this fix.
             """
-            file_to_patch = _get_vllm_file("attention/layer.py")
+            file_to_patch = _get_vllm_file("attention/layer.py", required=False)
+            if file_to_patch is None:
+                logger.info("Skipping vLLM vit flash attention patch (file not found)")
+                return
             with open(file_to_patch, "r") as f:
                 content = f.read()
 
@@ -492,8 +513,19 @@ class BaseVllmGenerationWorker:
 class VllmGenerationWorker(BaseVllmGenerationWorker):
     def _create_engine(self, llm_kwargs: dict[str, Any]) -> None:
         import vllm
+        from vllm import EngineArgs
+        import inspect
+        import logging
+        _logger = logging.getLogger(__name__)
 
-        self.llm = vllm.LLM(**llm_kwargs)
+        # Filter out kwargs not supported by this vLLM version
+        engine_args_params = set(inspect.signature(EngineArgs.__init__).parameters.keys())
+        filtered_kwargs = {k: v for k, v in llm_kwargs.items() if k in engine_args_params or k in ['served_model_name']}
+        unsupported = set(llm_kwargs.keys()) - set(filtered_kwargs.keys())
+        if unsupported:
+            _logger.warning(f"Filtering out vLLM kwargs not supported in this version: {unsupported}")
+
+        self.llm = vllm.LLM(**filtered_kwargs)
 
     def post_init(self):
         self.vllm_device_ids = self.report_device_id()

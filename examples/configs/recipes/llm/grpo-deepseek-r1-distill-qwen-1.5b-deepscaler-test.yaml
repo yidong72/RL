@@ -1,0 +1,46 @@
+# GRPO test config for DeepSeek-R1-Distill-Qwen-1.5B with DeepScaler dataset
+# This is a test config for validating the new API on the Slurm cluster
+
+defaults: ../../grpo_math_1B.yaml
+
+grpo:
+  max_num_steps: 10  # Just run 10 steps for testing
+  num_prompts_per_step: 8  # Smaller batch for faster testing
+  num_generations_per_prompt: 4  # Smaller generations for faster testing
+  val_period: 5
+
+checkpointing:
+  checkpoint_dir: results/grpo-deepseek-qwen-1.5b-deepscaler-test
+  save_period: 5
+  enabled: false  # Disable checkpointing for quick test
+
+policy:
+  model_name: deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B
+  tokenizer:
+    name: deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B
+  dtensor_cfg:
+    _v2: false  # Use v1 worker (doesn't require nemo_automodel)
+  train_global_batch_size: 32
+  train_micro_batch_size: 2
+  max_total_sequence_length: 2048
+  generation:
+    max_new_tokens: 1024
+    vllm_cfg:
+      max_model_len: 2048
+      gpu_memory_utilization: 0.7
+
+data:
+  max_input_seq_length: 1024
+  processor: "math_hf_data_processor"
+  env_name: "math"
+  dataset_name: "DeepScaler"
+
+logger:
+  log_dir: logs/grpo-deepseek-qwen-1.5b-deepscaler-test
+  wandb_enabled: false
+  tensorboard_enabled: true
+  monitor_gpus: true
+
+cluster:
+  gpus_per_node: 1
+  num_nodes: 1
