@@ -1,0 +1,27 @@
+## Summary
+
+I've made progress on the NeMo RL API refactoring task. Here's the current status:
+
+### Completed
+1. **Fixed `GRPOTrainer.fit()` return type** - Changed from `Dict[str, Any]` to `TrainingResult` dataclass
+2. **Updated `nemo_rl/api/train.py`** - Added GRPO-specific handling for the `fit()` signature (dataset name as string, reward_fn parameter)
+3. **Updated test script** - `examples/test_new_grpo_api.py` now uses `TrainingResult` attributes
+
+### Validated on Cluster
+- All imports work correctly (`GRPOTrainer`, `SFTTrainer`, `DPOTrainer`, `TrainingResult`)
+- `GRPOTrainer.from_pretrained()` creates valid config
+- Algorithm registry works (`dpo`, `grpo`, `sft`)
+- `TrainingResult` structure is correct
+
+### Blocked - Full Training Test
+The actual training is blocked by a **Ray worker environment issue**:
+- When using `uv run`, it creates a fresh venv at `/workspace/RL/.venv`
+- Ray spawns workers that fail to find the `ray` module because they run with a different Python path
+- This happens regardless of GPU count (1 or more)
+
+### Solutions to Unblock
+To complete full training tests, you need one of:
+1. **Container with pre-built venv** - A container that has `/opt/nemo_rl_venv` with ray properly installed (the `ray.sub` script expects this)
+2. **Use `ray.sub`** - Set up Ray cluster separately using the existing `ray.sub` infrastructure before running training
+
+The API code changes have been committed and pushed to `yi/refactor`. The test scripts are available in `/lustre/fsw/portfolios/nvr/users/yidong/Projects/nrl-api-test/` on the cluster.

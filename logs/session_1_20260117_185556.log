@@ -1,0 +1,35 @@
+Let me summarize the progress made in this session:
+
+## Progress Summary
+
+### Completed:
+1. **Fixed lazy imports in new API** (`grpo/__init__.py`, `sft/__init__.py`, `dpo/__init__.py`, `algorithms/__init__.py`)
+   - Trainers import directly, configs use `__getattr__` for lazy loading
+   - Avoids heavy dependency chains (mlflow, wandb, etc.)
+
+2. **Fixed `nemo_rl/utils/logger.py`**:
+   - Made mlflow, wandb, swanlab, ray imports lazy
+   - Fixed type annotations to use string forward references
+   - Added local imports inside functions where needed
+
+3. **Created `nemo_rl/utils/logger_types.py`**:
+   - Moved TypedDict definitions to separate file
+
+4. **Fixed `nemo_rl/trainers/callbacks.py`**:
+   - Added null check for trainer in LoggingCallback
+
+5. **All integration tests pass** on cluster:
+   - imports, from_pretrained, create_trainer, callbacks, datamodule
+
+6. **Test config created** for DeepScaler dataset
+
+### In Progress:
+- Single-node training loads config successfully and Ray starts
+- Ray worker registration error occurs (cluster-specific issue)
+
+### Remaining Tasks:
+- RL-3ww: Debug Ray worker registration issue
+- RL-u4f: Test multi-node (2 nodes) GRPO training
+- RL-do4: Fix GRPOTrainer integration with legacy grpo_train
+
+The core import issues are fixed. The remaining work is debugging the Ray cluster setup for training.
